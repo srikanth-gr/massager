@@ -1,0 +1,7 @@
+# FreeCAD temporary backup files
+*.FCStd.bak
+*.FCMacro.bak
+
+# OS junk
+.DS_Store
+Thumbs.db
