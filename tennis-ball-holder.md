@@ -7,24 +7,19 @@
 # Project Requirements: Shoulder Massage Tennis Ball Holder
 
 ## 1. Functional Objective
-Design an industrial-grade, heavy-duty shoulder massage tool that holds a standard tennis ball. The device must withstand full human body weight when pressed against a wall or floor. The assembly features a dual-axis load architecture: lateral retention and tracking via rotating side cups with integrated fingerprint-grip textures, and vertical load-bearing via a free-spinning center wheel embedded into the base foundation floor.
+Design an industrial-strength shoulder massage tool holding a standard tennis ball. The device is optimized for heavy load-bearing applications by separating vertical and lateral mechanical forces. The $15\text{mm}$ primary base plate remains solid and unbroken to ensure high stiffness.
 
-## 2. Mechanical Design & Assembly Profile
-- **Axis of Rotation:** Single-axis (X-axis) rolling alignment.
-- **Base Geometry:** Circular cylindrical foundation ($120\text{mm}$ diameter) optimized for ergonomic hand grip and flush surface stability.
-- **Snap-In Connection Mechanics:** The clearance passage between the innermost rims of the side cup holders is restricted to exactly $64\text{mm}$. Pushing a standard $67\text{mm}$ tennis ball downward compresses its rubber wall by $3\text{mm}$. Once pushed past the entry lips to the centerline axis, the ball pops back to its original shape, locking it with a tactile snap fit.
-- **Center Support Roller:** A horizontal wheel ($36\text{mm}$ diameter) mounted on a local Y-axis pin inside the floor center. It protrudes slightly out of the base floor to support the ball from underneath, transferring downward body forces away from the side axles.
-- **Fingerprint Cups:** Concave side holders featuring a built-in internal spherical offset that creates concentric gripping ridges to latch onto ball fuzz.
-- **Concealed Blind Bores:** $18\text{mm}$ deep blind pockets on the inner faces of the arms, ensuring the exterior surface remains smooth to the touch.
+## 2. Mechanical Design & Assembly Profile (V7.5 Layout)
+- **Solid Continuous Base:** The base foundation remains a complete, solid $15\text{mm}$ thick disc for maximum tensile and compressive strength.
+- **2x Proportional Raised Pedestal:** A $24\text{mm} \times 32\text{mm} \times 12\text{mm}$ structural housing block is fused directly onto the top face of the base. This provides walls exactly twice the thickness of the wheel radius, keeping the assembly rugged under heavy massage forces.
+- **Separate Print Support Wheel:** A $12\text{mm}$ diameter, $16\text{mm}$ wide tangent wheel is printed as a standalone component. It sits inside the pedestal channel on a horizontal Y-axis pin (using a standard $4\text{mm}$ filament snippet or metal rod) to ensure ultra-low friction rotation.
+- **Calibrated Snap-Fit Opening:** The clearance passage between the faces of the cup holders is exactly $64\text{mm}$ to provide a firm, tactile snap lock on a standard $67\text{mm}$ tennis ball.
 
-## 3. Structural Dimensions (V7.2 Layout)
+## 3. Structural Dimensions
 - **Base:** Cylinder, $120\text{mm}$ diameter ($60\text{mm}$ radius), $15\text{mm}$ thickness.
-- **Support Arms:** Integrated into base outer radius ($60\text{mm}$). $22\text{mm}$ thick each, $40\text{mm}$ depth (Y-axis), extended to $85\text{mm}$ height.
-- **Arm Cavity (Inner Span):** $82\text{mm}$ wide clear space between arms.
-- **Center Roller Cavity:** $40\text{mm} \times 20\text{mm}$ cutout box carved out at $(0,0)$.
-- **Center Wheel:** Cylinder, $18\text{mm}$ radius ($36\text{mm}$ diameter), $16\text{mm}$ track width, spinning horizontally.
-- **Rotating Cups:** $72\text{mm}$ outer diameter, $25\text{mm}$ base thickness, $33.5\text{mm}$ spherical inner radius profile.
-- **Integrated Axle Stubs:** $8\text{mm}$ diameter ($4\text{mm}$ radius), $15\text{mm}$ length, extending outward from cup flat faces.
+- **Support Arms:** $22\text{mm}$ thickness, $40\text{mm}$ depth, $85\text{mm}$ height, outer edge curved to $R=60\text{mm}$.
+- **Support Wheel (Printed Separately):** $6\text{mm}$ radius ($12\text{mm}$ diameter), $16\text{mm}$ width, $4.2\text{mm}$ center pin bore hole.
+- **Pedestal Block Assembly:** Outside envelope of $24\text{mm} \times 32\text{mm} \times 12\text{mm}$ with a $18\text{mm} \times 18\text{mm}$ internal drop pocket.
 
 ## 4. Software & CAD Strategy
 - **Environment:** FreeCAD (Python Macro Automation).

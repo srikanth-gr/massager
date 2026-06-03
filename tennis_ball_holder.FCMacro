@@ -5,48 +5,55 @@
 # Last Comment: V6 design - Round base, blind axle pockets, open-jaw narrow arms.
 # METADATA_END
 
-# FreeCAD V7.2 Center Thrust Wheel & Textured Fingerprint Grip Massage Tool Macro
+# FreeCAD V7.5 Separate-Print Wheel & Double-Scaled Support Pedestal Macro
 import FreeCAD as App
 import Part
 
 # Initialize Document
 doc = App.activeDocument()
 if not doc:
-    doc = App.newDocument("MassagerV72SnapFit")
+    doc = App.newDocument("MassagerV75Assembly")
 
-# Clean previous objects for a clean build run
+# Clean previous objects for a fresh build run
 objects_to_clear = [
     "FinalAssembly", "YokeBody", "LeftCup", "RightCup", "CenterWheel",
     "RoundBase", "LeftArmBlock", "RightArmBlock", "LeftBlindPocket", "RightBlindPocket", 
-    "YokeSolid", "YokeWithBores", "CenterCutout", "WheelBlank", "YokeFuse1", "YokeP1",
+    "YokeSolid", "YokeWithBores", "PedestalBlock", "PedestalPocket", "WheelPedestal",
     "LeftCupBlank", "LeftBallCut", "LeftCupBase", "RidgeLeft", "LeftCupTextured", "LeftAxle",
-    "RightCupBlank", "RightBallCut", "RightCupBase", "RidgeRight", "RightCupTextured", "RightAxle"
+    "RightCupBlank", "RightBallCut", "RightCupBase", "RidgeRight", "RightCupTextured", "RightAxle",
+    "ArmShavingCylinder", "CurvedArmsFused", "RawArmsCombined", "YokeFuse1", "YokeP1",
+    "YokeWithPedestal", "PinHoleCutout"
 ]
 for name in objects_to_clear:
     if doc.getObject(name):
         doc.removeObject(name)
 
 # ==========================================
-# 1. GEOMETRY PARAMETERS (V7.2 Calibrated)
+# 1. GEOMETRY PARAMETERS (V7.5 Calibrated)
 # ==========================================
-base_radius = 60.0       # 120mm diameter base
+base_radius = 60.0       # 120mm diameter circular base
 base_thickness = 15.0
 arm_thickness = 22.0
-arm_cavity = 82.0        # Widened to 82mm for side clearances
-arm_height = 85.0        # Height extended to 85mm to accommodate center wheel
-arm_depth = 40.0         # Open-jaw profile depth
+arm_cavity = 82.0        
+arm_height = 85.0        
+arm_depth = 40.0         
 
 cup_diameter = 72.0
-cup_thickness = 25.0     # 25mm thickness leaves a perfect 64mm snap-fit opening gap
-ball_radius = 33.5       # 33.5mm radius matches the 67mm tennis ball surface
-axle_radius = 4.0        # 8mm diameter axle stubs
-axle_length = 15.0       # Fits safely inside the 18mm deep blind pockets
+cup_thickness = 25.0     # Leaves a perfect 64mm snap entry gap
+ball_radius = 33.5       
+axle_radius = 4.0        
+axle_length = 15.0       
+
+# Wheel & Double-Scaled Pedestal Envelope Variables
+wheel_radius = 6.0       # 120mm / 10 proportional downscale = 12mm diameter wheel
+wheel_width = 16.0       
+pedestal_height = 12.0   # Exactly twice the wheel radius scale
 
 half_cavity = arm_cavity / 2.0
-rotation_axis_z = 60.0   # Raised rotation centerline height
+rotation_axis_z = 60.0   
 
 # ==========================================
-# 2. BUILD ROUND YOKE BODY WITH CENTER CAVITY
+# 2. BUILD ROUND BASE & INTEGRATED CURVED ARMS
 # ==========================================
 round_base = doc.addObject("Part::Cylinder", "RoundBase")
 round_base.Radius = base_radius
@@ -64,18 +71,63 @@ right_arm.Width = arm_depth
 right_arm.Height = arm_height
 right_arm.Placement = App.Placement(App.Vector(half_cavity, -arm_depth/2.0, base_thickness), App.Rotation(0, 0, 0))
 
-# Fuse arms and base foundation
-yoke_fuse1 = doc.addObject("Part::Fuse", "YokeFuse1")
-yoke_fuse1.Base = round_base
-yoke_fuse1.Tool = left_arm
+raw_arms = doc.addObject("Part::Fuse", "RawArmsCombined")
+raw_arms.Base = left_arm
+raw_arms.Tool = right_arm
+
+shaving_cyl = doc.addObject("Part::Cylinder", "ArmShavingCylinder")
+shaving_cyl.Radius = base_radius
+shaving_cyl.Height = arm_height + 20.0
+shaving_cyl.Placement = App.Placement(App.Vector(0, 0, base_thickness), App.Rotation(0, 0, 0))
+
+curved_arms = doc.addObject("Part::Common", "CurvedArmsFused")
+curved_arms.Base = raw_arms
+curved_arms.Tool = shaving_cyl
 
 yoke_solid = doc.addObject("Part::Fuse", "YokeSolid")
-yoke_solid.Base = yoke_fuse1
-yoke_solid.Tool = right_arm
+yoke_solid.Base = round_base
+yoke_solid.Tool = curved_arms
 
-# Create 8mm Blind Pockets for Axles (Hides axle tips from the exterior)
+# ==========================================
+# 3. EXTRA SUPPORT: 2X SCALED RAISED PEDESTAL BLOCK
+# ==========================================
+pedestal = doc.addObject("Part::Box", "PedestalBlock")
+pedestal.Length = 24.0
+pedestal.Width = 32.0    # Twice the 16mm wheel width for thick mounting flanges
+pedestal.Height = pedestal_height
+pedestal.Placement = App.Placement(App.Vector(-12.0, -16.0, base_thickness), App.Rotation(0, 0, 0))
+
+# Internal drop pocket cavity for wheel clearance
+pedestal_pocket = doc.addObject("Part::Box", "PedestalPocket")
+pedestal_pocket.Length = 18.0
+pedestal_pocket.Width = 18.0    # Leaves 1mm clearance gaps flanking the 16mm wheel
+pedestal_pocket.Height = pedestal_height + 2.0
+pedestal_pocket.Placement = App.Placement(App.Vector(-9.0, -9.0, base_thickness + 2.0), App.Rotation(0, 0, 0))
+
+raw_housing = doc.addObject("Part::Cut", "WheelPedestal")
+raw_housing.Base = pedestal
+raw_housing.Tool = pedestal_pocket
+
+# Cut a 4.4mm horizontal cross bore hole through the pedestal walls for the 4mm pivot pin
+pin_hole = doc.addObject("Part::Cylinder", "PinHoleCutout")
+pin_hole.Radius = 2.2    # 4.4mm diameter clear fit hole
+pin_hole.Height = 40.0
+pin_hole.Placement = App.Placement(App.Vector(0, -20.0, base_thickness + wheel_radius), App.Rotation(App.Vector(1,0,0), 90))
+
+final_wheel_housing = doc.addObject("Part::Cut", "FinalWheelHousing")
+final_wheel_housing.Base = raw_housing
+final_wheel_housing.Tool = pin_hole
+
+# Fuse the clean pin housing directly to the main structural frame
+yoke_with_pedestal = doc.addObject("Part::Fuse", "YokeWithPedestal")
+yoke_with_pedestal.Base = yoke_solid
+yoke_with_pedestal.Tool = final_wheel_housing
+
+# ==========================================
+# 4. CONCEALED BLIND POCKETS FOR SIDE AXLES
+# ==========================================
 left_pocket = doc.addObject("Part::Cylinder", "LeftBlindPocket")
-left_pocket.Radius = axle_radius + 0.25  # Built-in 0.5mm printer clearance
+left_pocket.Radius = axle_radius + 0.25  
 left_pocket.Height = 18.0
 left_pocket.Placement = App.Placement(App.Vector(-half_cavity, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), -90))
 
@@ -85,35 +137,33 @@ right_pocket.Height = 18.0
 right_pocket.Placement = App.Placement(App.Vector(half_cavity, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 90))
 
 yoke_p1 = doc.addObject("Part::Cut", "YokeP1")
-yoke_p1.Base = yoke_solid
+yoke_p1.Base = yoke_with_pedestal
 yoke_p1.Tool = left_pocket
 
-yoke_with_bores = doc.addObject("Part::Cut", "YokeWithBores")
-yoke_with_bores.Base = yoke_p1
-yoke_with_bores.Tool = right_pocket
-
-# Cutout floor channel to embed the lower support wheel
-center_cutout = doc.addObject("Part::Box", "CenterCutout")
-center_cutout.Length = 20.0
-center_cutout.Width = 40.0
-center_cutout.Height = 25.0
-center_cutout.Placement = App.Placement(App.Vector(-10.0, -20.0, 0), App.Rotation(0, 0, 0))
-
 yoke_body = doc.addObject("Part::Cut", "YokeBody")
-yoke_body.Base = yoke_with_bores
-yoke_body.Tool = center_cutout
+yoke_body.Base = yoke_p1
+yoke_body.Tool = right_pocket
 
 # ==========================================
-# 3. BUILD CENTER ROLLER WHEEL (Lower Thrust Bearing)
+# 5. STANDALONE LOWER SUPPORT WHEEL (Separate Object)
 # ==========================================
-wheel = doc.addObject("Part::Cylinder", "CenterWheel")
-wheel.Radius = 18.0      # 36mm outer diameter wheel
-wheel.Height = 16.0      # 16mm track depth width
-# Placed horizontally in the base cutout to catch vertical loads
-wheel.Placement = App.Placement(App.Vector(0, -8.0, 8.0), App.Rotation(App.Vector(1,0,0), 90))
+wheel_blank = doc.addObject("Part::Cylinder", "WheelBlank")
+wheel_blank.Radius = wheel_radius
+wheel_blank.Height = wheel_width
+wheel_blank.Placement = App.Placement(App.Vector(0, -wheel_width/2.0, base_thickness + wheel_radius), App.Rotation(App.Vector(1,0,0), 90))
+
+# Inner hole to receive the 4mm pivot pin assembly axis
+wheel_bore = doc.addObject("Part::Cylinder", "WheelBore")
+wheel_bore.Radius = 2.1  # 4.2mm internal diameter bore hole
+wheel_bore.Height = 24.0
+wheel_bore.Placement = App.Placement(App.Vector(0, -12.0, base_thickness + wheel_radius), App.Rotation(App.Vector(1,0,0), 90))
+
+center_wheel = doc.addObject("Part::Cut", "CenterWheel")
+center_wheel.Base = wheel_blank
+center_wheel.Tool = wheel_bore
 
 # ==========================================
-# 4. BUILD LEFT CUP WITH FINGERPRINT GRIP TEXTURE
+# 6. BUILD LEFT TEXTURED GRIP CUP
 # ==========================================
 left_cup_blank = doc.addObject("Part::Cylinder", "LeftCupBlank")
 left_cup_blank.Radius = cup_diameter / 2.0
@@ -128,7 +178,6 @@ left_cup_base = doc.addObject("Part::Cut", "LeftCupBase")
 left_cup_base.Base = left_cup_blank
 left_cup_base.Tool = left_ball_cut
 
-# Create fingerprint texture concentric ring ridge inside the cup
 ridge_left = doc.addObject("Part::Sphere", "RidgeLeft")
 ridge_left.Radius = ball_radius - 1.5
 ridge_left.Placement = App.Placement(App.Vector(0, 0, rotation_axis_z), App.Rotation(0, 0, 0))
@@ -147,7 +196,7 @@ left_cup.Base = left_cup_textured
 left_cup.Tool = left_axle
 
 # ==========================================
-# 5. BUILD RIGHT CUP WITH FINGERPRINT GRIP TEXTURE
+# 7. BUILD RIGHT TEXTURED GRIP CUP
 # ==========================================
 right_cup_blank = doc.addObject("Part::Cylinder", "RightCupBlank")
 right_cup_blank.Radius = cup_diameter / 2.0
@@ -180,16 +229,16 @@ right_cup.Base = right_cup_textured
 right_cup.Tool = right_axle
 
 # ==========================================
-# 6. ASSEMBLY COMPILATION & VIEWPORT UPDATE
+# 8. ASSEMBLY RECOMPUTE COMPILATION
 # ==========================================
 assembly = doc.addObject("Part::Compound", "FinalAssembly")
-assembly.Links = [yoke_body, wheel, left_cup, right_cup]
+assembly.Links = [yoke_body, center_wheel, left_cup, right_cup]
 
-# Clean up UI view trees to display final assembly group only
+# Configure clean viewport tree presentation
 for obj in doc.Objects:
     if obj.Name != "FinalAssembly":
         obj.Visibility = False
 
 assembly.Visibility = True
 doc.recompute()
-App.Console.PrintMessage("FreeCAD V7.2 Snap-Fit Thrust Assembly compiled successfully!\n")
+App.Console.PrintMessage("FreeCAD V7.5 Industrial Grade Assembly generated successfully!\n")
