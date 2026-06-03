@@ -64,8 +64,8 @@ To prevent breaking geometry during future programmatic modifications or scaling
 
 ### 2. Non-Uniform Primitive Scaling (The AttributeError Bug)
 - **The Error:** Attempting to assign a non-uniform scale directly to an active feature primitive property (e.g., `left_sph.Scale = (0.7, 1.0, 1.0)`) throws a Python interpreter `AttributeError`. Standard FreeCAD `Part` primitives do not expose a mutable scaling property.
-- **The Geometric Fix:** Ellipsoids must be generated at the pure topological shape level before being wrapped into a document feature. The script instantiates a basic shape using `Part.makeSphere()`, creates a geometric matrix transformation object (`App.Matrix4x4()`), applies `.scale(x, y, z)` to the matrix, transforms the underlying shape via `.transformShape()`, and only then binds the resulting unique shape to a generic `Part::Feature`.
+- **The Geometric Fix:** Ellipsoids must be generated at the pure topological shape level before being wrapped into a document feature. The script instantiates a basic shape using `Part.makeSphere()`, creates a geometric matrix transformation object (`Base.Matrix()`), applies `.scale(x, y, z)` to the matrix, transforms the underlying shape via `.transformShape()`, and only then binds the resulting unique shape to a generic `Part::Feature`.
 
-### 3. Namespace Targeting for Matrix Operations (The Base Module Rule)
-- **The Error:** Writing `import FreeCAD.Base as Base` throws a `ModuleNotFoundError: No module named 'FreeCAD.Base'`. FreeCAD's underlying architecture does not support direct sub-module dot-imports for its core C++ wrappers.
-- **The Geometric Fix:** The `Base` subsystem must be extracted as an attribute of the top-level application module rather than a nested package import. The macro must first run `import FreeCAD as App` or `import FreeCAD`, and then explicitly map the namespace via an assignment statement: `Base = App.Base` or `Base = FreeCAD.Base`.
+### 3. Class Targeting for Matrix Operations (The Base.Matrix Rule)
+- **The Error:** Calling `Base.Matrix4x4()` throws an `AttributeError: module '__FreeCADBase__' has no attribute 'Matrix4x4'`. FreeCAD stores its transformation engine under a generic naming matrix standard rather than dimension-explicit class names.
+- **The Geometric Fix:** To invoke the internal 4x4 matrix constructor engine safely without throwing runtime crashes, the class must be targeted directly using `Base.Matrix()`.
