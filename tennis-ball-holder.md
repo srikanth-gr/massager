@@ -1,3 +1,5 @@
+<!-- METADATA_START -->
+<!-- METADATA_END -->
 # Project Requirements: Shoulder Massage Tennis Ball Holder
 
 ## 1. Functional Objective
