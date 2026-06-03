@@ -1,8 +1,8 @@
 <!-- METADATA_START -->
 - **File Name**: tennis-ball-holder.md
-- **Version**: cd050c2
-- **Last Commit Date**: 2026-06-03 15:03:01 +0200
-- **Last Comment**: fix: adjust macro import structure to reference App.Base as an attribute to solve ModuleNotFoundError
+- **Version**: 4d7323e
+- **Last Commit Date**: 2026-06-03 15:10:46 +0200
+- **Last Comment**: fix: resolve C++ wrapper crash by moving from Matrix4x4 to core Base.Matrix constructor
 <!-- METADATA_END -->
 
 # Project Requirements: Shoulder Massage Tennis Ball Holder

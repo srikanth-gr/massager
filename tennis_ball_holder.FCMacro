@@ -1,8 +1,8 @@
 # METADATA_START
 # File Name: tennis_ball_holder.FCMacro
-# Version: 735ff85
-# Last Commit Date: 2026-06-03 15:04:22 +0200
-# Last Comment: fix: adjust macro import structure to reference App.Base as an attribute to solve ModuleNotFoundError
+# Version: 4d7323e
+# Last Commit Date: 2026-06-03 15:10:46 +0200
+# Last Comment: fix: resolve C++ wrapper crash by moving from Matrix4x4 to core Base.Matrix constructor
 # METADATA_END
 
 # FreeCAD V7.15 Definitive Base.Matrix Non-Uniform Scaling Assembly Macro
