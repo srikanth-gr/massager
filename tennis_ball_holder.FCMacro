@@ -1,87 +1,164 @@
 # METADATA_START
-# File Name: tennis_ball_holder.FCMacro
-# Version: 9a2999b
-# Last Commit Date: 2026-06-03 11:11:18 +0200
-# Last Comment: yaml fixes to handle FCMacro
+# File Name: 
+# Version: 
+# Last Commit Date: 
+# Last Comment: 
 # METADATA_END
 
-# FreeCAD V4 Saddle Rail Yoke Massage Tool Macro
+# FreeCAD V5 Rotating Cup Yoke Massage Tool Macro
 import FreeCAD as App
 import Part
 
 # Initialize Document
 doc = App.activeDocument()
 if not doc:
-    doc = App.newDocument("MassagerV4SaddleRail")
+    doc = App.newDocument("MassagerV5RotatingCup")
 
-# Clean previous objects for a fresh run
-objects_to_clear = ["FinalAssembly", "MassagerBase", "LeftTower", "RightTower", "YokeSolid", "BallSaddleCutout", "TopSnapClip", "MainYokeBody"]
+# Clean previous objects for a fresh run to prevent geometry overlapping
+objects_to_clear = [
+    "FinalAssembly", "YokeBody", "LeftCup", "RightCup", "BasePlate", 
+    "LeftArm", "RightArm", "LeftBore", "RightBore", "YokeSolid", 
+    "YokeFrame", "YokeBodyMid", "LeftCupBlank", "LeftBallCut", 
+    "LeftCupFaced", "LeftAxle", "RightCupBlank", "RightBallCut", 
+    "RightCupFaced", "RightAxle", "FinalYokeBody"
+]
 for name in objects_to_clear:
     if doc.getObject(name):
         doc.removeObject(name)
 
-# 1. Base Footprint Foundation
-base_plate = doc.addObject("Part::Box", "MassagerBase")
-base_plate.Length = 110.0   # 110mm width
-base_plate.Width = 80.0     # 80mm depth
-base_plate.Height = 15.0    # 15mm heavy duty thickness
-base_plate.Placement = App.Placement(App.Vector(-55, -40, 0), App.Rotation(0, 0, 0))
+# ==========================================
+# 1. GEOMETRY PARAMETERS (V5 Layout)
+# ==========================================
+base_length = 120.0
+base_width = 80.0
+base_thickness = 15.0
+arm_thickness = 22.0
+arm_cavity = 76.0
+arm_height = 70.0
 
-# 2. Support Towers (Spaced tightly to create the 6mm saddle channels on the inner faces)
-# Standard tennis ball diameter is 67mm.
-# Placing the 22mm thick towers at an offset creates an intentional overlap for the saddle rails.
-left_tower = doc.addObject("Part::Box", "LeftTower")
-left_tower.Length = 22.0
-left_tower.Width = 70.0
-left_tower.Height = 65.0
-left_tower.Placement = App.Placement(App.Vector(-49.5, -35, 15), App.Rotation(0, 0, 0))
+cup_diameter = 72.0
+cup_thickness = 28.0
+ball_radius = 33.5
+axle_dia = 8.0
+axle_length = 38.0
 
-right_tower = doc.addObject("Part::Box", "RightTower")
-right_tower.Length = 22.0
-right_tower.Width = 70.0
-right_tower.Height = 65.0
-right_tower.Placement = App.Placement(App.Vector(27.5, -35, 15), App.Rotation(0, 0, 0))
+# Calculate coordinate offsets based on centerplane alignment
+half_cavity = arm_cavity / 2.0
+arm_start_left = -half_cavity - arm_thickness
+arm_start_right = half_cavity
+rotation_axis_z = 50.0  # Centerline height of the rolling axis
 
-# Fuse the base and the towers into one rigid yoke structure
-yoke_fuse = doc.addObject("Part::Fuse", "YokeSolid")
-yoke_fuse.Base = base_plate
-yoke_fuse.Tool = left_tower
+# ==========================================
+# 2. BUILD MAIN YOKE BODY
+# ==========================================
+base_plate = doc.addObject("Part::Box", "BasePlate")
+base_plate.Length = base_length
+base_plate.Width = base_width
+base_plate.Height = base_thickness
+base_plate.Placement = App.Placement(App.Vector(-base_length/2.0, -base_width/2.0, 0), App.Rotation(0, 0, 0))
 
-yoke_solid_body = doc.addObject("Part::Fuse", "MainYokeBody")
-yoke_solid_body.Base = yoke_fuse
-yoke_solid_body.Tool = right_tower
+left_arm = doc.addObject("Part::Box", "LeftArm")
+left_arm.Length = arm_thickness
+left_arm.Width = base_width
+left_arm.Height = arm_height
+left_arm.Placement = App.Placement(App.Vector(arm_start_left, -base_width/2.0, base_thickness), App.Rotation(0, 0, 0))
 
-# 3. Generating the 6mm Saddle Rail Channels via Ball Intersection Cutout
-# Spherical cutout radius = 33.5mm (67mm diameter tennis ball)
-ball_saddle_cutout = doc.addObject("Part::Sphere", "BallSaddleCutout")
-ball_saddle_cutout.Radius = 33.5
-ball_saddle_cutout.Placement = App.Placement(App.Vector(0, 0, 48), App.Rotation(0, 0, 0))
+right_arm = doc.addObject("Part::Box", "RightArm")
+right_arm.Length = arm_thickness
+right_arm.Width = base_width
+right_arm.Height = arm_height
+right_arm.Placement = App.Placement(App.Vector(arm_start_right, -base_width/2.0, base_thickness), App.Rotation(0, 0, 0))
 
-# The Boolean Cut leaves precise concave curved rails on the inner faces of both towers
-final_yoke = doc.addObject("Part::Cut", "FinalYokeBody")
-final_yoke.Base = yoke_solid_body
-final_yoke.Tool = ball_saddle_cutout
+# Fuse arms and base together
+yoke_solid = doc.addObject("Part::Fuse", "YokeSolid")
+yoke_solid.Base = base_plate
+yoke_solid.Tool = left_arm
 
-# 4. Top Snap Clip Enclosure Latch
-# This creates a structural brace bridging across the top of the open yoke
-snap_clip = doc.addObject("Part::Box", "TopSnapClip")
-snap_clip.Length = 101.0
-snap_clip.Width = 40.0
-snap_clip.Height = 8.0
-# Positioned exactly on top of the towers to secure the ball against upward ejection forces
-snap_clip.Placement = App.Placement(App.Vector(-50.5, -20, 80), App.Rotation(0, 0, 0))
+yoke_frame = doc.addObject("Part::Fuse", "YokeFrame")
+yoke_frame.Base = yoke_solid
+yoke_frame.Tool = right_arm
 
-# Group everything into a single operational view group
+# Create 8mm Bores for the Axle Stubs (Corrected to .Height)
+left_bore = doc.addObject("Part::Cylinder", "LeftBore")
+left_bore.Radius = axle_dia / 2.0
+left_bore.Height = arm_thickness + 5.0
+left_bore.Placement = App.Placement(App.Vector(-half_cavity, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), -90))
+
+right_bore = doc.addObject("Part::Cylinder", "RightBore")
+right_bore.Radius = axle_dia / 2.0
+right_bore.Height = arm_thickness + 5.0
+right_bore.Placement = App.Placement(App.Vector(half_cavity, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 90))
+
+# Subtract the bores out of the frame body to accept axles
+yoke_body_mid = doc.addObject("Part::Cut", "YokeBodyMid")
+yoke_body_mid.Base = yoke_frame
+yoke_body_mid.Tool = left_bore
+
+yoke_body = doc.addObject("Part::Cut", "YokeBody")
+yoke_body.Base = yoke_body_mid
+yoke_body.Tool = right_bore
+
+# ==========================================
+# 3. BUILD LEFT ROTATING CUP (Corrected to .Height)
+# ==========================================
+left_cup_blank = doc.addObject("Part::Cylinder", "LeftCupBlank")
+left_cup_blank.Radius = cup_diameter / 2.0
+left_cup_blank.Height = cup_thickness
+left_cup_blank.Placement = App.Placement(App.Vector(-half_cavity + cup_thickness, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), -90))
+
+left_ball_cut = doc.addObject("Part::Sphere", "LeftBallCut")
+left_ball_cut.Radius = ball_radius
+left_ball_cut.Placement = App.Placement(App.Vector(0, 0, rotation_axis_z), App.Rotation(0, 0, 0))
+
+left_cup_faced = doc.addObject("Part::Cut", "LeftCupFaced")
+left_cup_faced.Base = left_cup_blank
+left_cup_faced.Tool = left_ball_cut
+
+left_axle = doc.addObject("Part::Cylinder", "LeftAxle")
+left_axle.Radius = axle_dia / 2.0
+left_axle.Height = axle_length
+left_axle.Placement = App.Placement(App.Vector(-half_cavity, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), -90))
+
+left_cup = doc.addObject("Part::Fuse", "LeftCup")
+left_cup.Base = left_cup_faced
+left_cup.Tool = left_axle
+
+# ==========================================
+# 4. BUILD RIGHT ROTATING CUP (Corrected to .Height)
+# ==========================================
+right_cup_blank = doc.addObject("Part::Cylinder", "RightCupBlank")
+right_cup_blank.Radius = cup_diameter / 2.0
+right_cup_blank.Height = cup_thickness
+right_cup_blank.Placement = App.Placement(App.Vector(half_cavity - cup_thickness, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 90))
+
+right_ball_cut = doc.addObject("Part::Sphere", "RightBallCut")
+right_ball_cut.Radius = ball_radius
+right_ball_cut.Placement = App.Placement(App.Vector(0, 0, rotation_axis_z), App.Rotation(0, 0, 0))
+
+right_cup_faced = doc.addObject("Part::Cut", "RightCupFaced")
+right_cup_faced.Base = right_cup_blank
+right_cup_faced.Tool = right_ball_cut
+
+right_axle = doc.addObject("Part::Cylinder", "RightAxle")
+right_axle.Radius = axle_dia / 2.0
+right_axle.Height = axle_length
+right_axle.Placement = App.Placement(App.Vector(half_cavity, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 90))
+
+right_cup = doc.addObject("Part::Fuse", "RightCup")
+right_cup.Base = right_cup_faced
+right_cup.Tool = right_axle
+
+# ==========================================
+# 5. ASSEMBLY COMPILATION
+# ==========================================
 assembly = doc.addObject("Part::Compound", "FinalAssembly")
-assembly.Links = [final_yoke, snap_clip]
+assembly.Links = [yoke_body, left_cup, right_cup]
 
-# --- UI Visibility Management ---
-# Hide construction steps
-for obj in [base_plate, left_tower, right_tower, yoke_fuse, yoke_solid_body, ball_saddle_cutout, final_yoke, snap_clip]:
-    obj.Visibility = False
+# --- UI View Configuration ---
+for obj in doc.Objects:
+    if obj.Name != "FinalAssembly":
+        obj.Visibility = False
 
-# Show full V4 layout
 assembly.Visibility = True
-
 doc.recompute()
-App.Console.PrintMessage("FreeCAD V4 Saddle Rail & Snap Clip MVP generated successfully!\n")
+App.Console.PrintMessage("FreeCAD V5 Rotating Cup Assembly layout generated successfully!\n")

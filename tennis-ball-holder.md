@@ -1,42 +1,48 @@
 <!-- METADATA_START -->
 - **File Name**: tennis-ball-holder.md
-- **Version**: 4203567
-- **Last Commit Date**: 2026-06-03 10:56:22 +0200
-- **Last Comment**: V4 - Claude V4 Saddle Rail Yoke
+- **Version**: fac7896
+- **Last Commit Date**: 2026-06-03
+- **Last Comment**: V5 design - rotating cups with integrated axle stubs.
 <!-- METADATA_END -->
 
 # Project Requirements: Shoulder Massage Tennis Ball Holder
 
 ## 1. Functional Objective
-Design a heavy-duty mechanical shoulder massage tool that holds a standard tennis ball. The ball must roll smoothly under full body weight load to relieve deep muscle tension. The design uses a passive concave saddle rail system for constrained single-axis rolling with no axle or hardware passing through or contacting the ball.
+Design a heavy-duty mechanical shoulder massage tool that holds a standard tennis ball. The ball rolls smoothly under full body weight load via two rotating concave cups mounted on the yoke arms. Each cup spins freely on its integrated axle stub, allowing controlled single-axis rolling along the X-axis.
 
 ## 2. Mechanical Design & Motion Profile
-- Axis of Rotation: Single-axis (X-axis). The ball spins in place like a wheel/roller to follow shoulder stroke direction.
-- Retention System: Concave saddle rail. Each yoke arm has a curved inner channel (6mm deep, radius matching ball curvature) that cradles the ball along a line of contact. No axle, no pins, no hardware near the ball cavity.
-- Top Enclosure: Snap clip latch across the top of the yoke. Prevents vertical ejection of the ball under downward or lateral body weight load.
+- Axis of Rotation: Single-axis (X-axis). Ball rolls like a wheel to follow shoulder stroke direction.
+- Retention System: Two concave rotating cups, one per arm, each cradling the ball at the equator. The cups rotate with the ball on the X-axis.
+- Cup Mounting: Each cup has an integrated cylindrical axle stub (8mm dia, 38mm long) centered at the cup midpoint, which aligns with the ball equator. The stub inserts into a single circular bore on the arm inner face and locks via a retention lip.
 
 ## 3. Structural Integrity & Rigidity
-- Load Support: Must survive full human body weight pressed against a wall or floor without fracture, slip, or delamination.
-- Component Dimensions (V4 Layout):
-  - Base Footprint: 110mm x 80mm stabilizing foundation block.
-  - Base Thickness: 15mm minimum solid thickness.
-  - Support Towers (Yoke): 22mm thick reinforced vertical side walls.
-  - Saddle Rail Depth: 6mm concave channel on each arm inner face.
-  - Ball Cavity: Spherical cutout at 33.5mm radius (67mm diameter tennis ball).
-- No through-bore. The ball cavity is fully open on the axle axis; retention is handled entirely by the saddle rails and snap clip.
+- Load Support: Must survive full human body weight pressed against a wall or floor.
+- Component Dimensions (V5 Layout):
+  - Base Footprint: 120mm x 80mm.
+  - Base Thickness: 15mm minimum.
+  - Support Arms (Yoke): 22mm thick each.
+  - Arm Cavity (between arms): 76mm.
+  - Cup Dimensions: 28mm thick x 72mm diameter each (56mm total).
+  - Concave Face Radius: 33.5mm matching ball surface.
+  - Axle Stub: 8mm diameter cylinder, 38mm long, centered at cup midpoint. Built into the flat side of the cup.
+  - Retention Lip: 5mm radius ring at axle tip.
+  - Axle Clearance per side: 10mm.
+  - Ball Cavity: 33.5mm radius spherical cutout.
 
-## 4. Software & CAD Strategy
+## 4. Parts List
+1. Yoke body x1 — PLA or PETG. Single print, base flat on bed.
+2. Rotating cup x2 — PETG. Axle stub integrated. Print concave face up.
+No hardware required. Fully self-contained printed assembly.
+
+## 5. Software & CAD Strategy
 - Environment: FreeCAD (Python Macro Automation).
-- API Compatibility: Scripted using Part workbench primitives (Part::Box, Part::Cylinder, Part::Sphere) and boolean operations (Part::Fuse, Part::Cut). No PartDesign workbench dependencies.
-- Saddle Rail Geometry: Modelled as a Part::Sphere boolean cut along each arm inner face, radius 33.5mm, depth 6mm, centered on ball equator.
-- Snap Clip: Modelled as a thin Part::Box bridge across the yoke top with a small interference-fit notch for retention.
-
-## 5. FreeCAD Python Macro
-Will be maintained in a separate file outside this md.
-
+- API: Part workbench primitives and boolean operations only. No PartDesign dependencies.
+- Cup geometry: Box body with sphere boolean cut on front face for concave profile. Cylinder fused on back face at midpoint for axle stub. Retention lip cylinder fused at stub tip.
+- Right cup: mirrored from left cup along X-axis centerplane.
 
 ## 6. Design History & Evolution
-1. V1 (Static Cup): Single-piece solid cylinder holding the ball passively. Superseded to enable rolling.
-2. V2 (Vertical Pin Pivot): Two-part assembly with base pin and free-spinning dual-claw arm for 360-degree rotation. Superseded due to load limitations and ball slip risk.
-3. V3 (Industrial Over-Center Yoke MVP): Thick 22mm arms with continuous metal through-bolt on X-axis. Superseded because the through-axle blocks a real tennis ball from being mounted.
-4. V4 (Saddle Rail Yoke): Current design. No axle or hardware contacts the ball. Retention via 6mm deep concave saddle rails on each arm inner face plus a snap clip latch across the yoke top. Smooth controlled X-axis roll under full body weight.
+1. V1 (Static Cup): Single-piece cylinder holding ball passively. Superseded to enable rolling.
+2. V2 (Vertical Pin Pivot): Two-part assembly with free-spinning dual-claw arm. Superseded due to load limitations.
+3. V3 (Over-Center Yoke): Thick 22mm arms with metal through-bolt. Superseded as through-axle blocks real ball.
+4. V4 (Saddle Rail Yoke): Concave saddle rails with snap clip. Superseded as clip blocked massage access.
+5. V5 (Rotating Cup Yoke): Current design. Two concave rotating cups with integrated cylindrical axle stubs centered at ball equator. Ball rolls freely on X-axis. No hardware required.
