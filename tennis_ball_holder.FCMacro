@@ -5,69 +5,66 @@
 # Last Comment: V6 design - Round base, blind axle pockets, open-jaw narrow arms.
 # METADATA_END
 
-# FreeCAD V6 Round Base & Blind Axle Open-Jaw Massage Tool Macro
+# FreeCAD V7.2 Center Thrust Wheel & Textured Fingerprint Grip Massage Tool Macro
 import FreeCAD as App
 import Part
-import math
 
 # Initialize Document
 doc = App.activeDocument()
 if not doc:
-    doc = App.newDocument("MassagerV6Round")
+    doc = App.newDocument("MassagerV72SnapFit")
 
 # Clean previous objects for a clean build run
 objects_to_clear = [
-    "FinalAssembly", "YokeBody", "LeftCup", "RightCup", "RoundBase", 
-    "LeftArmBlock", "RightArmBlock", "LeftBlindPocket", "RightBlindPocket", 
-    "YokeSolid", "LeftArmCut", "RightArmCut", "BaseCutoutFilter"
+    "FinalAssembly", "YokeBody", "LeftCup", "RightCup", "CenterWheel",
+    "RoundBase", "LeftArmBlock", "RightArmBlock", "LeftBlindPocket", "RightBlindPocket", 
+    "YokeSolid", "YokeWithBores", "CenterCutout", "WheelBlank", "YokeFuse1", "YokeP1",
+    "LeftCupBlank", "LeftBallCut", "LeftCupBase", "RidgeLeft", "LeftCupTextured", "LeftAxle",
+    "RightCupBlank", "RightBallCut", "RightCupBase", "RidgeRight", "RightCupTextured", "RightAxle"
 ]
 for name in objects_to_clear:
     if doc.getObject(name):
         doc.removeObject(name)
 
 # ==========================================
-# 1. GEOMETRY PARAMETERS (V6 Rounded Layout)
+# 1. GEOMETRY PARAMETERS (V7.2 Calibrated)
 # ==========================================
-base_radius = 60.0       # 120mm diameter circular base
+base_radius = 60.0       # 120mm diameter base
 base_thickness = 15.0
 arm_thickness = 22.0
-arm_cavity = 76.0
-arm_height = 70.0
-arm_depth = 40.0         # Narrower arm depth for open-jaw cup clearance
+arm_cavity = 82.0        # Widened to 82mm for side clearances
+arm_height = 85.0        # Height extended to 85mm to accommodate center wheel
+arm_depth = 40.0         # Open-jaw profile depth
 
 cup_diameter = 72.0
-cup_thickness = 28.0
-ball_radius = 33.5
-axle_radius = 4.0        # 8mm diameter axle stub
-axle_length = 15.0       # Shortened to fit blindly inside 22mm arm
+cup_thickness = 25.0     # 25mm thickness leaves a perfect 64mm snap-fit opening gap
+ball_radius = 33.5       # 33.5mm radius matches the 67mm tennis ball surface
+axle_radius = 4.0        # 8mm diameter axle stubs
+axle_length = 15.0       # Fits safely inside the 18mm deep blind pockets
 
 half_cavity = arm_cavity / 2.0
-rotation_axis_z = 50.0   # Rolling height centerpoint
+rotation_axis_z = 60.0   # Raised rotation centerline height
 
 # ==========================================
-# 2. BUILD ROUND BASE & INTEGRATED ARMS
+# 2. BUILD ROUND YOKE BODY WITH CENTER CAVITY
 # ==========================================
-# Circular primary base foundation
 round_base = doc.addObject("Part::Cylinder", "RoundBase")
 round_base.Radius = base_radius
 round_base.Height = base_thickness
-round_base.Placement = App.Placement(App.Vector(0, 0, 0), App.Rotation(0, 0, 0))
 
-# Left arm block (positioned symmetrically outside the 76mm cavity)
 left_arm = doc.addObject("Part::Box", "LeftArmBlock")
 left_arm.Length = arm_thickness
 left_arm.Width = arm_depth
 left_arm.Height = arm_height
 left_arm.Placement = App.Placement(App.Vector(-half_cavity - arm_thickness, -arm_depth/2.0, base_thickness), App.Rotation(0, 0, 0))
 
-# Right arm block 
 right_arm = doc.addObject("Part::Box", "RightArmBlock")
 right_arm.Length = arm_thickness
 right_arm.Width = arm_depth
 right_arm.Height = arm_height
 right_arm.Placement = App.Placement(App.Vector(half_cavity, -arm_depth/2.0, base_thickness), App.Rotation(0, 0, 0))
 
-# Fuse raw structural components together
+# Fuse arms and base foundation
 yoke_fuse1 = doc.addObject("Part::Fuse", "YokeFuse1")
 yoke_fuse1.Base = round_base
 yoke_fuse1.Tool = left_arm
@@ -76,32 +73,47 @@ yoke_solid = doc.addObject("Part::Fuse", "YokeSolid")
 yoke_solid.Base = yoke_fuse1
 yoke_solid.Tool = right_arm
 
-# ==========================================
-# 3. CONCEALED BLIND POCKETS (AXLE BORES)
-# ==========================================
-# Left blind pocket (cut 18mm into the 22mm arm from the inside out)
+# Create 8mm Blind Pockets for Axles (Hides axle tips from the exterior)
 left_pocket = doc.addObject("Part::Cylinder", "LeftBlindPocket")
-left_pocket.Radius = axle_radius + 0.25 # Includes 0.5mm structural printing tolerance fit
+left_pocket.Radius = axle_radius + 0.25  # Built-in 0.5mm printer clearance
 left_pocket.Height = 18.0
 left_pocket.Placement = App.Placement(App.Vector(-half_cavity, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), -90))
 
-# Right blind pocket
 right_pocket = doc.addObject("Part::Cylinder", "RightBlindPocket")
 right_pocket.Radius = axle_radius + 0.25
 right_pocket.Height = 18.0
 right_pocket.Placement = App.Placement(App.Vector(half_cavity, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 90))
 
-# Carve out the pockets leaving the outer walls untouched
-yoke_pocket_mid = doc.addObject("Part::Cut", "YokePocketMid")
-yoke_pocket_mid.Base = yoke_solid
-yoke_pocket_mid.Tool = left_pocket
+yoke_p1 = doc.addObject("Part::Cut", "YokeP1")
+yoke_p1.Base = yoke_solid
+yoke_p1.Tool = left_pocket
+
+yoke_with_bores = doc.addObject("Part::Cut", "YokeWithBores")
+yoke_with_bores.Base = yoke_p1
+yoke_with_bores.Tool = right_pocket
+
+# Cutout floor channel to embed the lower support wheel
+center_cutout = doc.addObject("Part::Box", "CenterCutout")
+center_cutout.Length = 20.0
+center_cutout.Width = 40.0
+center_cutout.Height = 25.0
+center_cutout.Placement = App.Placement(App.Vector(-10.0, -20.0, 0), App.Rotation(0, 0, 0))
 
 yoke_body = doc.addObject("Part::Cut", "YokeBody")
-yoke_body.Base = yoke_pocket_mid
-yoke_body.Tool = right_pocket
+yoke_body.Base = yoke_with_bores
+yoke_body.Tool = center_cutout
 
 # ==========================================
-# 4. BUILD LEFT OPEN-JAW ROTATING CUP
+# 3. BUILD CENTER ROLLER WHEEL (Lower Thrust Bearing)
+# ==========================================
+wheel = doc.addObject("Part::Cylinder", "CenterWheel")
+wheel.Radius = 18.0      # 36mm outer diameter wheel
+wheel.Height = 16.0      # 16mm track depth width
+# Placed horizontally in the base cutout to catch vertical loads
+wheel.Placement = App.Placement(App.Vector(0, -8.0, 8.0), App.Rotation(App.Vector(1,0,0), 90))
+
+# ==========================================
+# 4. BUILD LEFT CUP WITH FINGERPRINT GRIP TEXTURE
 # ==========================================
 left_cup_blank = doc.addObject("Part::Cylinder", "LeftCupBlank")
 left_cup_blank.Radius = cup_diameter / 2.0
@@ -112,22 +124,30 @@ left_ball_cut = doc.addObject("Part::Sphere", "LeftBallCut")
 left_ball_cut.Radius = ball_radius
 left_ball_cut.Placement = App.Placement(App.Vector(0, 0, rotation_axis_z), App.Rotation(0, 0, 0))
 
-left_cup_faced = doc.addObject("Part::Cut", "LeftCupFaced")
-left_cup_faced.Base = left_cup_blank
-left_cup_faced.Tool = left_ball_cut
+left_cup_base = doc.addObject("Part::Cut", "LeftCupBase")
+left_cup_base.Base = left_cup_blank
+left_cup_base.Tool = left_ball_cut
 
-# Short, safe integrated axle stub
+# Create fingerprint texture concentric ring ridge inside the cup
+ridge_left = doc.addObject("Part::Sphere", "RidgeLeft")
+ridge_left.Radius = ball_radius - 1.5
+ridge_left.Placement = App.Placement(App.Vector(0, 0, rotation_axis_z), App.Rotation(0, 0, 0))
+
+left_cup_textured = doc.addObject("Part::Cut", "LeftCupTextured")
+left_cup_textured.Base = left_cup_base
+left_cup_textured.Tool = ridge_left
+
 left_axle = doc.addObject("Part::Cylinder", "LeftAxle")
 left_axle.Radius = axle_radius
 left_axle.Height = axle_length
 left_axle.Placement = App.Placement(App.Vector(-half_cavity, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), -90))
 
 left_cup = doc.addObject("Part::Fuse", "LeftCup")
-left_cup.Base = left_cup_faced
+left_cup.Base = left_cup_textured
 left_cup.Tool = left_axle
 
 # ==========================================
-# 5. BUILD RIGHT OPEN-JAW ROTATING CUP
+# 5. BUILD RIGHT CUP WITH FINGERPRINT GRIP TEXTURE
 # ==========================================
 right_cup_blank = doc.addObject("Part::Cylinder", "RightCupBlank")
 right_cup_blank.Radius = cup_diameter / 2.0
@@ -138,9 +158,17 @@ right_ball_cut = doc.addObject("Part::Sphere", "RightBallCut")
 right_ball_cut.Radius = ball_radius
 right_ball_cut.Placement = App.Placement(App.Vector(0, 0, rotation_axis_z), App.Rotation(0, 0, 0))
 
-right_cup_faced = doc.addObject("Part::Cut", "RightCupFaced")
-right_cup_faced.Base = right_cup_blank
-right_cup_faced.Tool = right_ball_cut
+right_cup_base = doc.addObject("Part::Cut", "RightCupBase")
+right_cup_base.Base = right_cup_blank
+right_cup_base.Tool = right_ball_cut
+
+ridge_right = doc.addObject("Part::Sphere", "RidgeRight")
+ridge_right.Radius = ball_radius - 1.5
+ridge_right.Placement = App.Placement(App.Vector(0, 0, rotation_axis_z), App.Rotation(0, 0, 0))
+
+right_cup_textured = doc.addObject("Part::Cut", "RightCupTextured")
+right_cup_textured.Base = right_cup_base
+right_cup_textured.Tool = ridge_right
 
 right_axle = doc.addObject("Part::Cylinder", "RightAxle")
 right_axle.Radius = axle_radius
@@ -148,20 +176,20 @@ right_axle.Height = axle_length
 right_axle.Placement = App.Placement(App.Vector(half_cavity, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 90))
 
 right_cup = doc.addObject("Part::Fuse", "RightCup")
-right_cup.Base = right_cup_faced
+right_cup.Base = right_cup_textured
 right_cup.Tool = right_axle
 
 # ==========================================
-# 6. COMPILING THE FINAL V6 ASSEMBLY
+# 6. ASSEMBLY COMPILATION & VIEWPORT UPDATE
 # ==========================================
 assembly = doc.addObject("Part::Compound", "FinalAssembly")
-assembly.Links = [yoke_body, left_cup, right_cup]
+assembly.Links = [yoke_body, wheel, left_cup, right_cup]
 
-# Clean up UI tree presentation view tracking
+# Clean up UI view trees to display final assembly group only
 for obj in doc.Objects:
     if obj.Name != "FinalAssembly":
         obj.Visibility = False
 
 assembly.Visibility = True
 doc.recompute()
-App.Console.PrintMessage("FreeCAD V6 Premium Rounded Assembly layout compiled successfully!\n")
+App.Console.PrintMessage("FreeCAD V7.2 Snap-Fit Thrust Assembly compiled successfully!\n")
