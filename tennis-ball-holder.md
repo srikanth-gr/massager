@@ -1,8 +1,8 @@
 <!-- METADATA_START -->
 - **File Name**: tennis-ball-holder.md
-- **Version**: fac7895
-- **Last Commit Date**: 2026-06-03
-- **Last Comment**: V4 design - saddle rail system, snap clip enclosure.
+- **Version**: 4203567
+- **Last Commit Date**: 2026-06-03 10:56:22 +0200
+- **Last Comment**: V4 - Claude V4 Saddle Rail Yoke
 <!-- METADATA_END -->
 
 # Project Requirements: Shoulder Massage Tennis Ball Holder
