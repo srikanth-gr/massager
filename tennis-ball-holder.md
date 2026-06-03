@@ -1,8 +1,8 @@
 <!-- METADATA_START -->
 - **File Name**: tennis-ball-holder.md
-- **Version**: da062ef
-- **Last Commit Date**: 2026-06-03 14:44:36 +0200
-- **Last Comment**: V7.11 design - Fully unified file containing behavioral V&V protocols and programmatic code review gates.
+- **Version**: ed416bd
+- **Last Commit Date**: 2026-06-03 14:49:47 +0200
+- **Last Comment**: V7.13 design - Added Section 6 covering topological shape transformation rules and inverted corner masking to prevent future macro regressions.
 <!-- METADATA_END -->
 
 # Project Requirements: Shoulder Massage Tennis Ball Holder
