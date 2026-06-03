@@ -5,16 +5,16 @@
 # Last Comment: V7.5 design - Separate print 12mm wheel, 2x scaled rugged pedestal housing.
 # METADATA_END
 
-# FreeCAD V7.5 Separate-Print Wheel & Double-Scaled Support Pedestal Macro
+# FreeCAD V7.6 Ellipsoid Cups & Ergonomic Blended Arm Massage Tool Macro
 import FreeCAD as App
 import Part
 
 # Initialize Document
 doc = App.activeDocument()
 if not doc:
-    doc = App.newDocument("MassagerV75Assembly")
+    doc = App.newDocument("MassagerV76EllipsoidLayout")
 
-# Clean previous objects for a fresh build run
+# Clean previous objects for a completely fresh build run
 objects_to_clear = [
     "FinalAssembly", "YokeBody", "LeftCup", "RightCup", "CenterWheel",
     "RoundBase", "LeftArmBlock", "RightArmBlock", "LeftBlindPocket", "RightBlindPocket", 
@@ -22,38 +22,38 @@ objects_to_clear = [
     "LeftCupBlank", "LeftBallCut", "LeftCupBase", "RidgeLeft", "LeftCupTextured", "LeftAxle",
     "RightCupBlank", "RightBallCut", "RightCupBase", "RidgeRight", "RightCupTextured", "RightAxle",
     "ArmShavingCylinder", "CurvedArmsFused", "RawArmsCombined", "YokeFuse1", "YokeP1",
-    "YokeWithPedestal", "PinHoleCutout"
+    "YokeWithPedestal", "PinHoleCutout", "FinalWheelHousing", "WheelBlank", "WheelBore",
+    "FrontArmCutter", "YokeFrontCurved", "LeftCupEllipsoid", "RightCupEllipsoid"
 ]
 for name in objects_to_clear:
     if doc.getObject(name):
         doc.removeObject(name)
 
 # ==========================================
-# 1. GEOMETRY PARAMETERS (V7.5 Calibrated)
+# 1. GEOMETRY PARAMETERS (V7.6 Ergonomic)
 # ==========================================
 base_radius = 60.0       # 120mm diameter circular base
 base_thickness = 15.0
 arm_thickness = 22.0
 arm_cavity = 82.0        
-arm_height = 85.0        
+arm_height = 68.0        # Reduced height to stay flush with the cup top crest
 arm_depth = 40.0         
 
 cup_diameter = 72.0
-cup_thickness = 25.0     # Leaves a perfect 64mm snap entry gap
-ball_radius = 33.5       
+cup_thickness = 25.0     # 64mm snap entry gap spacing
+ball_radius = 33.5       # Matches standard 67mm tennis ball
 axle_radius = 4.0        
 axle_length = 15.0       
 
-# Wheel & Double-Scaled Pedestal Envelope Variables
-wheel_radius = 6.0       # 120mm / 10 proportional downscale = 12mm diameter wheel
+wheel_radius = 6.0       # 12mm diameter wheel
 wheel_width = 16.0       
-pedestal_height = 12.0   # Exactly twice the wheel radius scale
+pedestal_height = 12.0   # Double the wheel radius scale
 
 half_cavity = arm_cavity / 2.0
-rotation_axis_z = 60.0   
+rotation_axis_z = 45.0   # Lowered rotation center to maintain 68mm squat profile
 
 # ==========================================
-# 2. BUILD ROUND BASE & INTEGRATED CURVED ARMS
+# 2. BUILD SOLID BASE & INTEGRATED CURVED ARMS
 # ==========================================
 round_base = doc.addObject("Part::Cylinder", "RoundBase")
 round_base.Radius = base_radius
@@ -75,6 +75,7 @@ raw_arms = doc.addObject("Part::Fuse", "RawArmsCombined")
 raw_arms.Base = left_arm
 raw_arms.Tool = right_arm
 
+# Shave back outer arm faces to match base circular radius
 shaving_cyl = doc.addObject("Part::Cylinder", "ArmShavingCylinder")
 shaving_cyl.Radius = base_radius
 shaving_cyl.Height = arm_height + 20.0
@@ -84,23 +85,32 @@ curved_arms = doc.addObject("Part::Common", "CurvedArmsFused")
 curved_arms.Base = raw_arms
 curved_arms.Tool = shaving_cyl
 
+# Shave front arm profile to curve cleanly with the cup holders
+front_cutter = doc.addObject("Part::Cylinder", "FrontArmCutter")
+front_cutter.Radius = cup_diameter / 2.0 + 2.0
+front_cutter.Height = arm_thickness * 3.0
+front_cutter.Placement = App.Placement(App.Vector(-arm_thickness*1.5, arm_depth/2.0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 90))
+
+yoke_front_curved = doc.addObject("Part::Cut", "YokeFrontCurved")
+yoke_front_curved.Base = curved_arms
+yoke_front_curved.Tool = front_cutter
+
 yoke_solid = doc.addObject("Part::Fuse", "YokeSolid")
 yoke_solid.Base = round_base
-yoke_solid.Tool = curved_arms
+yoke_solid.Tool = yoke_front_curved
 
 # ==========================================
-# 3. EXTRA SUPPORT: 2X SCALED RAISED PEDESTAL BLOCK
+# 3. EXTRA SUPPORT: 2X SCALED PEDESTAL HOUSING
 # ==========================================
 pedestal = doc.addObject("Part::Box", "PedestalBlock")
 pedestal.Length = 24.0
-pedestal.Width = 32.0    # Twice the 16mm wheel width for thick mounting flanges
+pedestal.Width = 32.0    
 pedestal.Height = pedestal_height
 pedestal.Placement = App.Placement(App.Vector(-12.0, -16.0, base_thickness), App.Rotation(0, 0, 0))
 
-# Internal drop pocket cavity for wheel clearance
 pedestal_pocket = doc.addObject("Part::Box", "PedestalPocket")
 pedestal_pocket.Length = 18.0
-pedestal_pocket.Width = 18.0    # Leaves 1mm clearance gaps flanking the 16mm wheel
+pedestal_pocket.Width = 18.0    
 pedestal_pocket.Height = pedestal_height + 2.0
 pedestal_pocket.Placement = App.Placement(App.Vector(-9.0, -9.0, base_thickness + 2.0), App.Rotation(0, 0, 0))
 
@@ -108,9 +118,8 @@ raw_housing = doc.addObject("Part::Cut", "WheelPedestal")
 raw_housing.Base = pedestal
 raw_housing.Tool = pedestal_pocket
 
-# Cut a 4.4mm horizontal cross bore hole through the pedestal walls for the 4mm pivot pin
 pin_hole = doc.addObject("Part::Cylinder", "PinHoleCutout")
-pin_hole.Radius = 2.2    # 4.4mm diameter clear fit hole
+pin_hole.Radius = 2.2    # 4.4mm hole for 4mm pivot pin clearance
 pin_hole.Height = 40.0
 pin_hole.Placement = App.Placement(App.Vector(0, -20.0, base_thickness + wheel_radius), App.Rotation(App.Vector(1,0,0), 90))
 
@@ -118,7 +127,6 @@ final_wheel_housing = doc.addObject("Part::Cut", "FinalWheelHousing")
 final_wheel_housing.Base = raw_housing
 final_wheel_housing.Tool = pin_hole
 
-# Fuse the clean pin housing directly to the main structural frame
 yoke_with_pedestal = doc.addObject("Part::Fuse", "YokeWithPedestal")
 yoke_with_pedestal.Base = yoke_solid
 yoke_with_pedestal.Tool = final_wheel_housing
@@ -145,16 +153,15 @@ yoke_body.Base = yoke_p1
 yoke_body.Tool = right_pocket
 
 # ==========================================
-# 5. STANDALONE LOWER SUPPORT WHEEL (Separate Object)
+# 5. STANDALONE LOWER SUPPORT WHEEL 
 # ==========================================
 wheel_blank = doc.addObject("Part::Cylinder", "WheelBlank")
 wheel_blank.Radius = wheel_radius
 wheel_blank.Height = wheel_width
 wheel_blank.Placement = App.Placement(App.Vector(0, -wheel_width/2.0, base_thickness + wheel_radius), App.Rotation(App.Vector(1,0,0), 90))
 
-# Inner hole to receive the 4mm pivot pin assembly axis
 wheel_bore = doc.addObject("Part::Cylinder", "WheelBore")
-wheel_bore.Radius = 2.1  # 4.2mm internal diameter bore hole
+wheel_bore.Radius = 2.1  
 wheel_bore.Height = 24.0
 wheel_bore.Placement = App.Placement(App.Vector(0, -12.0, base_thickness + wheel_radius), App.Rotation(App.Vector(1,0,0), 90))
 
@@ -163,21 +170,26 @@ center_wheel.Base = wheel_blank
 center_wheel.Tool = wheel_bore
 
 # ==========================================
-# 6. BUILD LEFT TEXTURED GRIP CUP
+# 6. BUILD LEFT ELLIPSOID CUP WITH FINGERPRINT GRIP
 # ==========================================
-left_cup_blank = doc.addObject("Part::Cylinder", "LeftCupBlank")
-left_cup_blank.Radius = cup_diameter / 2.0
-left_cup_blank.Height = cup_thickness
-left_cup_blank.Placement = App.Placement(App.Vector(-half_cavity + cup_thickness, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), -90))
+# Generate base sphere to morph into an ellipsoid
+left_sph = doc.addObject("Part::Sphere", "LeftCupEllipsoid")
+left_sph.Radius = cup_diameter / 2.0
+# Scale X to make it thinner, scale Y and Z to keep strong equators
+left_sph.Scale = (0.7, 1.0, 1.0)
+
+# Shift and rotate ellipsoid base into position flush with inner left arm
+left_sph.Placement = App.Placement(App.Vector(-half_cavity + 6.0, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 0))
 
 left_ball_cut = doc.addObject("Part::Sphere", "LeftBallCut")
 left_ball_cut.Radius = ball_radius
 left_ball_cut.Placement = App.Placement(App.Vector(0, 0, rotation_axis_z), App.Rotation(0, 0, 0))
 
 left_cup_base = doc.addObject("Part::Cut", "LeftCupBase")
-left_cup_base.Base = left_cup_blank
+left_cup_base.Base = left_sph
 left_cup_base.Tool = left_ball_cut
 
+# Concentric fingerprint ring ridges inside cavity
 ridge_left = doc.addObject("Part::Sphere", "RidgeLeft")
 ridge_left.Radius = ball_radius - 1.5
 ridge_left.Placement = App.Placement(App.Vector(0, 0, rotation_axis_z), App.Rotation(0, 0, 0))
@@ -196,19 +208,19 @@ left_cup.Base = left_cup_textured
 left_cup.Tool = left_axle
 
 # ==========================================
-# 7. BUILD RIGHT TEXTURED GRIP CUP
+# 7. BUILD RIGHT ELLIPSOID CUP WITH FINGERPRINT GRIP
 # ==========================================
-right_cup_blank = doc.addObject("Part::Cylinder", "RightCupBlank")
-right_cup_blank.Radius = cup_diameter / 2.0
-right_cup_blank.Height = cup_thickness
-right_cup_blank.Placement = App.Placement(App.Vector(half_cavity - cup_thickness, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 90))
+right_sph = doc.addObject("Part::Sphere", "RightCupEllipsoid")
+right_sph.Radius = cup_diameter / 2.0
+right_sph.Scale = (0.7, 1.0, 1.0)
+right_sph.Placement = App.Placement(App.Vector(half_cavity - 6.0, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 0))
 
 right_ball_cut = doc.addObject("Part::Sphere", "RightBallCut")
 right_ball_cut.Radius = ball_radius
 right_ball_cut.Placement = App.Placement(App.Vector(0, 0, rotation_axis_z), App.Rotation(0, 0, 0))
 
 right_cup_base = doc.addObject("Part::Cut", "RightCupBase")
-right_cup_base.Base = right_cup_blank
+right_cup_base.Base = right_sph
 right_cup_base.Tool = right_ball_cut
 
 ridge_right = doc.addObject("Part::Sphere", "RidgeRight")
@@ -234,11 +246,11 @@ right_cup.Tool = right_axle
 assembly = doc.addObject("Part::Compound", "FinalAssembly")
 assembly.Links = [yoke_body, center_wheel, left_cup, right_cup]
 
-# Configure clean viewport tree presentation
+# Configure viewport visibility to display only the final consolidated group
 for obj in doc.Objects:
     if obj.Name != "FinalAssembly":
         obj.Visibility = False
 
 assembly.Visibility = True
 doc.recompute()
-App.Console.PrintMessage("FreeCAD V7.5 Industrial Grade Assembly generated successfully!\n")
+App.Console.PrintMessage("FreeCAD V7.6 Continuous High Clearance Ellipsoid Assembly generated successfully!\n")
