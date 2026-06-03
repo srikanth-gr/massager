@@ -65,3 +65,7 @@ To prevent breaking geometry during future programmatic modifications or scaling
 ### 2. Non-Uniform Primitive Scaling (The AttributeError Bug)
 - **The Error:** Attempting to assign a non-uniform scale directly to an active feature primitive property (e.g., `left_sph.Scale = (0.7, 1.0, 1.0)`) throws a Python interpreter `AttributeError`. Standard FreeCAD `Part` primitives do not expose a mutable scaling property.
 - **The Geometric Fix:** Ellipsoids must be generated at the pure topological shape level before being wrapped into a document feature. The script instantiates a basic shape using `Part.makeSphere()`, creates a geometric matrix transformation object (`App.Matrix4x4()`), applies `.scale(x, y, z)` to the matrix, transforms the underlying shape via `.transformShape()`, and only then binds the resulting unique shape to a generic `Part::Feature`.
+
+### 3. Namespace Targeting for Matrix Operations (The Base Module Rule)
+- **The Error:** Calling `App.Matrix4x4()` or `FreeCAD.Matrix4x4()` throws an `AttributeError`. The root FreeCAD application instance does not register matrix constructors directly on its top-level namespace.
+- **The Geometric Fix:** Mathematical vectors, placements, and transformation matrices reside inside the `Base` subsystem. The macro must explicitly instantiate the matrix using `FreeCAD.Base.Matrix4x4()` or `import FreeCAD.Base as Base` followed by `Base.Matrix4x4()`.

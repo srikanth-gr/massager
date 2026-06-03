@@ -5,14 +5,15 @@
 # Last Comment: V7.13 Master Robust Arm & Matrix-Scaled Ellipsoid Assembly Macro
 # METADATA_END
 
-# FreeCAD V7.13 Master Robust Arm & Matrix-Scaled Ellipsoid Assembly Macro
+# FreeCAD V7.14 Fixed Namespace Matrix-Scaled Ellipsoid Assembly Macro
 import FreeCAD as App
+import FreeCAD.Base as Base
 import Part
 
 # Initialize Document
 doc = App.activeDocument()
 if not doc:
-    doc = App.newDocument("MassagerV713Master")
+    doc = App.newDocument("MassagerV714Master")
 
 # Clean previous objects for a completely fresh build run
 objects_to_clear = [
@@ -31,7 +32,7 @@ for name in objects_to_clear:
         doc.removeObject(name)
 
 # ==========================================
-# 1. GEOMETRY PARAMETERS (V7.13 Master Specs)
+# 1. GEOMETRY PARAMETERS (V7.14 Master Specs)
 # ==========================================
 base_radius = 60.0       # 120mm diameter base
 base_thickness = 15.0
@@ -186,10 +187,10 @@ center_wheel.Tool = wheel_bore
 # ==========================================
 # 6. BUILD LEFT ELLIPSOID CUP WITH FINGERPRINT GRIP
 # ==========================================
-# FIX: Instantiate raw sphere shape geometry and scale via a non-uniform 4x4 matrix transformation
+# FIX: Instantiated Matrix4x4 targeting the explicit FreeCAD Base module subsystem
 left_sph_geom = Part.makeSphere(cup_diameter / 2.0)
-scale_mat_left = App.Matrix4x4()
-scale_mat_left.scale(0.7, 1.0, 1.0) # Organic narrowing along X for high equator thickness
+scale_mat_left = Base.Matrix4x4()
+scale_mat_left.scale(0.7, 1.0, 1.0) 
 left_sph_geom.transformShape(scale_mat_left)
 
 left_sph = doc.addObject("Part::Feature", "LeftCupEllipsoid")
@@ -225,7 +226,7 @@ left_cup.Tool = left_axle
 # 7. BUILD RIGHT ELLIPSOID CUP WITH FINGERPRINT GRIP
 # ==========================================
 right_sph_geom = Part.makeSphere(cup_diameter / 2.0)
-scale_mat_right = App.Matrix4x4()
+scale_mat_right = Base.Matrix4x4()
 scale_mat_right.scale(0.7, 1.0, 1.0)
 right_sph_geom.transformShape(scale_mat_right)
 
@@ -271,4 +272,4 @@ for obj in doc.Objects:
 
 assembly.Visibility = True
 doc.recompute()
-App.Console.PrintMessage("FreeCAD V7.13 Unified Master Layout generated successfully!\n")
+App.Console.PrintMessage("FreeCAD V7.14 Clean Build Executed Successfully!\n")
