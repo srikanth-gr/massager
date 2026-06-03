@@ -26,8 +26,10 @@ Design an industrial-strength, ergonomic shoulder massage tool holding a standar
 - **Support Arms:** $22\text{mm}$ thick, $40\text{mm}$ deep, $68\text{mm}$ high.
 - **Ellipsoid Cups:** $72\text{mm}$ major diameter, $25\text{mm}$ absolute base thickness, $33.5\text{mm}$ inner pocket radius.
 - **Integrated Axle Stubs:** $8\text{mm}$ diameter ($4\text{mm}$ radius), $15\text{mm}$ length, fitting within $18\text{mm}$ blind pockets on the inner arms.
-- **Assembly Spatial Offsets:** - Left cup center placement must be set to $X = -48.0\text{mm}$ to clear the arm face.
-  - Right cup center placement must be set to $X = 48.0\text{mm}$ to clear the arm face.
+- **Assembly Spatial Offsets:**
+  - Left cup center placement must be set to $X = -48.0\text{mm}$, with its local axle cylinder rotated at $+90^\circ$ to project outward into the receiver socket.
+  - Right cup center placement must be set to $X = 48.0\text{mm}$, with its local axle cylinder rotated at $-90^\circ$ to project outward into the receiver socket.
+  - Pedestal must be centered exactly with the arm depth profile at $Y = -16.0\text{mm}$.
 
 ## 5. Functional Verification & Validation (V&V) Protocol
 

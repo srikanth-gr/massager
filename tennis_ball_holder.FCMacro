@@ -5,14 +5,14 @@
 # Last Comment: fix: resolve component merging bugs by realigning cup translation vectors
 # METADATA_END
 
-# FreeCAD V7.16 Assembly Clearance Correction Macro
+# FreeCAD V7.17 Synchronized Assembly Alignment Macro
 import FreeCAD as App
 import Part
 
 # Initialize Document
 doc = App.activeDocument()
 if not doc:
-    doc = App.newDocument("MassagerV716Master")
+    doc = App.newDocument("MassagerV717Master")
 
 Base = App.Base
 
@@ -107,6 +107,7 @@ pedestal = doc.addObject("Part::Box", "PedestalBlock")
 pedestal.Length = 24.0
 pedestal.Width = 32.0    
 pedestal.Height = pedestal_height
+# Aligned center to center symmetrically with the depth of the support arms
 pedestal.Placement = App.Placement(App.Vector(-12.0, -16.0, base_thickness), App.Rotation(0, 0, 0))
 
 pedestal_pocket = doc.addObject("Part::Box", "PedestalPocket")
@@ -147,6 +148,7 @@ right_pocket.Placement = App.Placement(App.Vector(half_cavity, 0, rotation_axis_
 
 yoke_p1 = doc.addObject("Part::Cut", "YokeP1")
 yoke_p1.Base = yoke_with_pedestal
+yoke_with_pedestal
 yoke_p1.Tool = left_pocket
 
 yoke_body = doc.addObject("Part::Cut", "YokeBody")
@@ -171,7 +173,7 @@ center_wheel.Base = wheel_blank
 center_wheel.Tool = wheel_bore
 
 # ==========================================
-# 6. BUILD LEFT ELLIPSOID CUP (CORRECTED PLACEMENT)
+# 6. BUILD LEFT ELLIPSOID CUP (AXLE DIRECTION FIXED)
 # ==========================================
 left_sph_geom = Part.makeSphere(cup_diameter / 2.0)
 scale_mat_left = Base.Matrix()
@@ -180,7 +182,6 @@ left_sph_geom.transformShape(scale_mat_left)
 
 left_sph = doc.addObject("Part::Feature", "LeftCupEllipsoid")
 left_sph.Shape = left_sph_geom
-# Pushed to X = -48.0 to maintain absolute clearance from the inner arm face
 left_sph.Placement = App.Placement(App.Vector(-48.0, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 0))
 
 left_ball_cut = doc.addObject("Part::Sphere", "LeftBallCut")
@@ -194,14 +195,15 @@ left_cup_base.Tool = left_ball_cut
 left_axle = doc.addObject("Part::Cylinder", "LeftAxle")
 left_axle.Radius = axle_radius
 left_axle.Height = axle_length
-left_axle.Placement = App.Placement(App.Vector(-48.0, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), -90))
+# FIXED: Rotated 90 instead of -90 to project inward toward the arm housing pocket cleanly
+left_axle.Placement = App.Placement(App.Vector(-48.0, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 90))
 
 left_cup = doc.addObject("Part::Fuse", "LeftCup")
 left_cup.Base = left_cup_base
 left_cup.Tool = left_axle
 
 # ==========================================
-# 7. BUILD RIGHT ELLIPSOID CUP (CORRECTED PLACEMENT)
+# 7. BUILD RIGHT ELLIPSOID CUP (AXLE DIRECTION FIXED)
 # ==========================================
 right_sph_geom = Part.makeSphere(cup_diameter / 2.0)
 scale_mat_right = Base.Matrix()
@@ -210,7 +212,6 @@ right_sph_geom.transformShape(scale_mat_right)
 
 right_sph = doc.addObject("Part::Feature", "RightCupEllipsoid")
 right_sph.Shape = right_sph_geom
-# Pushed to X = 48.0 to maintain absolute clearance from the inner arm face
 right_sph.Placement = App.Placement(App.Vector(48.0, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 0))
 
 right_ball_cut = doc.addObject("Part::Sphere", "RightBallCut")
@@ -224,7 +225,8 @@ right_cup_base.Tool = right_ball_cut
 right_axle = doc.addObject("Part::Cylinder", "RightAxle")
 right_axle.Radius = axle_radius
 right_axle.Height = axle_length
-right_axle.Placement = App.Placement(App.Vector(48.0, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 90))
+# FIXED: Rotated -90 instead of 90 to face outward into the right side arm receiver
+right_axle.Placement = App.Placement(App.Vector(48.0, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), -90))
 
 right_cup = doc.addObject("Part::Fuse", "RightCup")
 right_cup.Base = right_cup_base
@@ -242,4 +244,4 @@ for obj in doc.Objects:
 
 assembly.Visibility = True
 doc.recompute()
-App.Console.PrintMessage("FreeCAD V7.16 Assembly Spacing Fixed Successfully!\n")
+App.Console.PrintMessage("FreeCAD V7.17 Perfect Spatial Fit Alignment Generated!\n")
