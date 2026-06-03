@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - '**.md'
+      - '**.FCMacro'
 
 jobs:
   update-header:
@@ -23,29 +24,49 @@ jobs:
           
           if [ -z "$FILE_NAME" ]; then
             echo "No Markdown file changed."
+          else 
+          
+            # 2. Extract Git metadata safely
+            VERSION=$(git rev-parse --short HEAD)
+            
+            # Using standard ISO 8601 date format to avoid strict character clashing
+            COMMIT_DATE=$(git log -1 --format="%ai") 
+            
+            # Clean the commit message of any characters that break sed/perl
+            COMMIT_COMMENT=$(git log -1 --format="%s" | sed 's/[/&]/\\&/g')
+
+            echo "Updating metadata for $FILE_NAME"
+
+            # 3. Create the text block
+            # We escape the backslashes so Perl reads them as literal text strings
+            M_START="<!-- METADATA_START -->"
+            M_END="<!-- METADATA_END -->"
+            
+            # 4. Use an alternate delimiter (|) in sed to prevent formatting bleed
+            perl -i -0777 -pe "s|<!-- METADATA_START -->.*?<!-- METADATA_END -->|${M_START}\n- **File Name**: ${FILE_NAME}\n- **Version**: ${VERSION}\n- **Last Commit Date**: ${COMMIT_DATE}\n- **Last Comment**: ${COMMIT_COMMENT}\n${M_END}|s" "$FILE_NAME"
+          fi
+
+      - name: Extract Metadata and Update FCMacro File
+        run: |
+          FILE_NAME=$(git diff-tree --no-commit-id --name-only -r HEAD | grep '\.FCMacro$' | head -n 1)
+          
+          if [ -z "$FILE_NAME" ]; then
+            echo "No FCMacro file changed."
             exit 0
           fi
           
-          # 2. Extract Git metadata safely
           VERSION=$(git rev-parse --short HEAD)
-          
-          # Using standard ISO 8601 date format to avoid strict character clashing
-          COMMIT_DATE=$(git log -1 --format="%ai") 
-          
-          # Clean the commit message of any characters that break sed/perl
+          COMMIT_DATE=$(git log -1 --format="%ai")
           COMMIT_COMMENT=$(git log -1 --format="%s" | sed 's/[/&]/\\&/g')
 
           echo "Updating metadata for $FILE_NAME"
 
-          # 3. Create the text block
-          # We escape the backslashes so Perl reads them as literal text strings
-          M_START="<!-- METADATA_START -->"
-          M_END="<!-- METADATA_END -->"
-          
-          # 4. Use an alternate delimiter (|) in sed to prevent formatting bleed
-          perl -i -0777 -pe "s|<!-- METADATA_START -->.*?<!-- METADATA_END -->|${M_START}\n- **File Name**: ${FILE_NAME}\n- **Version**: ${VERSION}\n- **Last Commit Date**: ${COMMIT_DATE}\n- **Last Comment**: ${COMMIT_COMMENT}\n${M_END}|s" "$FILE_NAME"
+          M_START="# METADATA_START"
+          M_END="# METADATA_END"
 
+          perl -i -0777 -pe "s|# METADATA_START.*?# METADATA_END|${M_START}\n# File Name: ${FILE_NAME}\n# Version: ${VERSION}\n# Last Commit Date: ${COMMIT_DATE}\n# Last Comment: ${COMMIT_COMMENT}\n${M_END}|s" "$FILE_NAME"
+      
       - name: Commit and Push Changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "docs: auto-update markdown header metadata [skip ci]"
+          commit_message: "docs: auto-update file header metadata [skip ci]"

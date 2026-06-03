@@ -1,9 +1,9 @@
-<!-- METADATA_START -->
-- **File Name**: 
-- **Version**: 
-- **Last Commit Date**: 
-- **Last Comment**: 
-<!-- METADATA_END -->
+# METADATA_START
+# File Name:
+# Version:
+# Last Commit Date:
+# Last Comment:
+# METADATA_END
 
 # FreeCAD V4 Saddle Rail Yoke Massage Tool Macro
 import FreeCAD as App
