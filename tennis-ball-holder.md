@@ -1,8 +1,8 @@
 <!-- METADATA_START -->
 - **File Name**: tennis-ball-holder.md
-- **Version**: fac7896
-- **Last Commit Date**: 2026-06-03
-- **Last Comment**: V5 design - rotating cups with integrated axle stubs.
+- **Version**: 5f4a3d0
+- **Last Commit Date**: 2026-06-03 12:15:20 +0200
+- **Last Comment**: Axle connected to ball grip.
 <!-- METADATA_END -->
 
 # Project Requirements: Shoulder Massage Tennis Ball Holder
