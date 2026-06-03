@@ -5,101 +5,103 @@
 # Last Comment: Axle connected to ball grip.
 # METADATA_END
 
-# FreeCAD V5 Rotating Cup Yoke Massage Tool Macro
+# FreeCAD V6 Round Base & Blind Axle Open-Jaw Massage Tool Macro
 import FreeCAD as App
 import Part
+import math
 
 # Initialize Document
 doc = App.activeDocument()
 if not doc:
-    doc = App.newDocument("MassagerV5RotatingCup")
+    doc = App.newDocument("MassagerV6Round")
 
-# Clean previous objects for a fresh run to prevent geometry overlapping
+# Clean previous objects for a clean build run
 objects_to_clear = [
-    "FinalAssembly", "YokeBody", "LeftCup", "RightCup", "BasePlate", 
-    "LeftArm", "RightArm", "LeftBore", "RightBore", "YokeSolid", 
-    "YokeFrame", "YokeBodyMid", "LeftCupBlank", "LeftBallCut", 
-    "LeftCupFaced", "LeftAxle", "RightCupBlank", "RightBallCut", 
-    "RightCupFaced", "RightAxle", "FinalYokeBody"
+    "FinalAssembly", "YokeBody", "LeftCup", "RightCup", "RoundBase", 
+    "LeftArmBlock", "RightArmBlock", "LeftBlindPocket", "RightBlindPocket", 
+    "YokeSolid", "LeftArmCut", "RightArmCut", "BaseCutoutFilter"
 ]
 for name in objects_to_clear:
     if doc.getObject(name):
         doc.removeObject(name)
 
 # ==========================================
-# 1. GEOMETRY PARAMETERS (V5 Layout)
+# 1. GEOMETRY PARAMETERS (V6 Rounded Layout)
 # ==========================================
-base_length = 120.0
-base_width = 80.0
+base_radius = 60.0       # 120mm diameter circular base
 base_thickness = 15.0
 arm_thickness = 22.0
 arm_cavity = 76.0
 arm_height = 70.0
+arm_depth = 40.0         # Narrower arm depth for open-jaw cup clearance
 
 cup_diameter = 72.0
 cup_thickness = 28.0
 ball_radius = 33.5
-axle_dia = 8.0
-axle_length = 38.0
+axle_radius = 4.0        # 8mm diameter axle stub
+axle_length = 15.0       # Shortened to fit blindly inside 22mm arm
 
-# Calculate coordinate offsets based on centerplane alignment
 half_cavity = arm_cavity / 2.0
-arm_start_left = -half_cavity - arm_thickness
-arm_start_right = half_cavity
-rotation_axis_z = 50.0  # Centerline height of the rolling axis
+rotation_axis_z = 50.0   # Rolling height centerpoint
 
 # ==========================================
-# 2. BUILD MAIN YOKE BODY
+# 2. BUILD ROUND BASE & INTEGRATED ARMS
 # ==========================================
-base_plate = doc.addObject("Part::Box", "BasePlate")
-base_plate.Length = base_length
-base_plate.Width = base_width
-base_plate.Height = base_thickness
-base_plate.Placement = App.Placement(App.Vector(-base_length/2.0, -base_width/2.0, 0), App.Rotation(0, 0, 0))
+# Circular primary base foundation
+round_base = doc.addObject("Part::Cylinder", "RoundBase")
+round_base.Radius = base_radius
+round_base.Height = base_thickness
+round_base.Placement = App.Placement(App.Vector(0, 0, 0), App.Rotation(0, 0, 0))
 
-left_arm = doc.addObject("Part::Box", "LeftArm")
+# Left arm block (positioned symmetrically outside the 76mm cavity)
+left_arm = doc.addObject("Part::Box", "LeftArmBlock")
 left_arm.Length = arm_thickness
-left_arm.Width = base_width
+left_arm.Width = arm_depth
 left_arm.Height = arm_height
-left_arm.Placement = App.Placement(App.Vector(arm_start_left, -base_width/2.0, base_thickness), App.Rotation(0, 0, 0))
+left_arm.Placement = App.Placement(App.Vector(-half_cavity - arm_thickness, -arm_depth/2.0, base_thickness), App.Rotation(0, 0, 0))
 
-right_arm = doc.addObject("Part::Box", "RightArm")
+# Right arm block 
+right_arm = doc.addObject("Part::Box", "RightArmBlock")
 right_arm.Length = arm_thickness
-right_arm.Width = base_width
+right_arm.Width = arm_depth
 right_arm.Height = arm_height
-right_arm.Placement = App.Placement(App.Vector(arm_start_right, -base_width/2.0, base_thickness), App.Rotation(0, 0, 0))
+right_arm.Placement = App.Placement(App.Vector(half_cavity, -arm_depth/2.0, base_thickness), App.Rotation(0, 0, 0))
 
-# Fuse arms and base together
+# Fuse raw structural components together
+yoke_fuse1 = doc.addObject("Part::Fuse", "YokeFuse1")
+yoke_fuse1.Base = round_base
+yoke_fuse1.Tool = left_arm
+
 yoke_solid = doc.addObject("Part::Fuse", "YokeSolid")
-yoke_solid.Base = base_plate
-yoke_solid.Tool = left_arm
+yoke_solid.Base = yoke_fuse1
+yoke_solid.Tool = right_arm
 
-yoke_frame = doc.addObject("Part::Fuse", "YokeFrame")
-yoke_frame.Base = yoke_solid
-yoke_frame.Tool = right_arm
+# ==========================================
+# 3. CONCEALED BLIND POCKETS (AXLE BORES)
+# ==========================================
+# Left blind pocket (cut 18mm into the 22mm arm from the inside out)
+left_pocket = doc.addObject("Part::Cylinder", "LeftBlindPocket")
+left_pocket.Radius = axle_radius + 0.25 # Includes 0.5mm structural printing tolerance fit
+left_pocket.Height = 18.0
+left_pocket.Placement = App.Placement(App.Vector(-half_cavity, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), -90))
 
-# Create 8mm Bores for the Axle Stubs (Corrected to .Height)
-left_bore = doc.addObject("Part::Cylinder", "LeftBore")
-left_bore.Radius = axle_dia / 2.0
-left_bore.Height = arm_thickness + 5.0
-left_bore.Placement = App.Placement(App.Vector(-half_cavity, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), -90))
+# Right blind pocket
+right_pocket = doc.addObject("Part::Cylinder", "RightBlindPocket")
+right_pocket.Radius = axle_radius + 0.25
+right_pocket.Height = 18.0
+right_pocket.Placement = App.Placement(App.Vector(half_cavity, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 90))
 
-right_bore = doc.addObject("Part::Cylinder", "RightBore")
-right_bore.Radius = axle_dia / 2.0
-right_bore.Height = arm_thickness + 5.0
-right_bore.Placement = App.Placement(App.Vector(half_cavity, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 90))
-
-# Subtract the bores out of the frame body to accept axles
-yoke_body_mid = doc.addObject("Part::Cut", "YokeBodyMid")
-yoke_body_mid.Base = yoke_frame
-yoke_body_mid.Tool = left_bore
+# Carve out the pockets leaving the outer walls untouched
+yoke_pocket_mid = doc.addObject("Part::Cut", "YokePocketMid")
+yoke_pocket_mid.Base = yoke_solid
+yoke_pocket_mid.Tool = left_pocket
 
 yoke_body = doc.addObject("Part::Cut", "YokeBody")
-yoke_body.Base = yoke_body_mid
-yoke_body.Tool = right_bore
+yoke_body.Base = yoke_pocket_mid
+yoke_body.Tool = right_pocket
 
 # ==========================================
-# 3. BUILD LEFT ROTATING CUP (Corrected to .Height)
+# 4. BUILD LEFT OPEN-JAW ROTATING CUP
 # ==========================================
 left_cup_blank = doc.addObject("Part::Cylinder", "LeftCupBlank")
 left_cup_blank.Radius = cup_diameter / 2.0
@@ -114,8 +116,9 @@ left_cup_faced = doc.addObject("Part::Cut", "LeftCupFaced")
 left_cup_faced.Base = left_cup_blank
 left_cup_faced.Tool = left_ball_cut
 
+# Short, safe integrated axle stub
 left_axle = doc.addObject("Part::Cylinder", "LeftAxle")
-left_axle.Radius = axle_dia / 2.0
+left_axle.Radius = axle_radius
 left_axle.Height = axle_length
 left_axle.Placement = App.Placement(App.Vector(-half_cavity, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), -90))
 
@@ -124,7 +127,7 @@ left_cup.Base = left_cup_faced
 left_cup.Tool = left_axle
 
 # ==========================================
-# 4. BUILD RIGHT ROTATING CUP (Corrected to .Height)
+# 5. BUILD RIGHT OPEN-JAW ROTATING CUP
 # ==========================================
 right_cup_blank = doc.addObject("Part::Cylinder", "RightCupBlank")
 right_cup_blank.Radius = cup_diameter / 2.0
@@ -140,7 +143,7 @@ right_cup_faced.Base = right_cup_blank
 right_cup_faced.Tool = right_ball_cut
 
 right_axle = doc.addObject("Part::Cylinder", "RightAxle")
-right_axle.Radius = axle_dia / 2.0
+right_axle.Radius = axle_radius
 right_axle.Height = axle_length
 right_axle.Placement = App.Placement(App.Vector(half_cavity, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 90))
 
@@ -149,16 +152,16 @@ right_cup.Base = right_cup_faced
 right_cup.Tool = right_axle
 
 # ==========================================
-# 5. ASSEMBLY COMPILATION
+# 6. COMPILING THE FINAL V6 ASSEMBLY
 # ==========================================
 assembly = doc.addObject("Part::Compound", "FinalAssembly")
 assembly.Links = [yoke_body, left_cup, right_cup]
 
-# --- UI View Configuration ---
+# Clean up UI tree presentation view tracking
 for obj in doc.Objects:
     if obj.Name != "FinalAssembly":
         obj.Visibility = False
 
 assembly.Visibility = True
 doc.recompute()
-App.Console.PrintMessage("FreeCAD V5 Rotating Cup Assembly layout generated successfully!\n")
+App.Console.PrintMessage("FreeCAD V6 Premium Rounded Assembly layout compiled successfully!\n")
