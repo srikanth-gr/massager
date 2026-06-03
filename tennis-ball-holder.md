@@ -1,8 +1,8 @@
 <!-- METADATA_START -->
 - **File Name**: tennis-ball-holder.md
-- **Version**: 5f4a3d0
-- **Last Commit Date**: 2026-06-03 12:15:20 +0200
-- **Last Comment**: Axle connected to ball grip.
+- **Version**: 6a44f45
+- **Last Commit Date**: 2026-06-03 12:22:07 +0200
+- **Last Comment**: V6 design - Round base, blind axle pockets, open-jaw narrow arms.
 <!-- METADATA_END -->
 
 # Project Requirements: Shoulder Massage Tennis Ball Holder
