@@ -1,8 +1,8 @@
 # METADATA_START
 # File Name: tennis_ball_holder.FCMacro
-# Version: d09e68f
-# Last Commit Date: 2026-06-03 14:24:27 +0200
-# Last Comment: V7.5 design - Separate print 12mm wheel, 2x scaled rugged pedestal housing.
+# Version: 6c56632
+# Last Commit Date: 2026-06-03 14:32:17 +0200
+# Last Comment: V7.6 design - Ellipsoid cups with fingerprint ridges, matched front-arm curvature, squat 68mm height.
 # METADATA_END
 
 # FreeCAD V7.6 Ellipsoid Cups & Ergonomic Blended Arm Massage Tool Macro

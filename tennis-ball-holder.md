@@ -1,8 +1,8 @@
 <!-- METADATA_START -->
 - **File Name**: tennis-ball-holder.md
-- **Version**: 6a44f45
-- **Last Commit Date**: 2026-06-03 12:22:07 +0200
-- **Last Comment**: V6 design - Round base, blind axle pockets, open-jaw narrow arms.
+- **Version**: 6c56632
+- **Last Commit Date**: 2026-06-03 14:32:17 +0200
+- **Last Comment**: V7.6 design - Ellipsoid cups with fingerprint ridges, matched front-arm curvature, squat 68mm height.
 <!-- METADATA_END -->
 
 # Project Requirements: Shoulder Massage Tennis Ball Holder
