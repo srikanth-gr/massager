@@ -1,8 +1,8 @@
 # METADATA_START
 # File Name: tennis_ball_holder.FCMacro
-# Version: 1c31b7d
-# Last Commit Date: 2026-06-03 14:54:27 +0200
-# Last Comment: V7.13 Master Robust Arm & Matrix-Scaled Ellipsoid Assembly Macro
+# Version: 81636d0
+# Last Commit Date: 2026-06-03 14:59:28 +0200
+# Last Comment: V7.14 design - Added explicit FreeCAD.Base namespace requirement for Matrix4x4 operations to Section 6. # Project Requirements: Shoulder Massage Tennis Ball Holder
 # METADATA_END
 
 # FreeCAD V7.14 Fixed Namespace Matrix-Scaled Ellipsoid Assembly Macro

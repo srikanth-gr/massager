@@ -1,8 +1,8 @@
 <!-- METADATA_START -->
 - **File Name**: tennis-ball-holder.md
-- **Version**: ed416bd
-- **Last Commit Date**: 2026-06-03 14:49:47 +0200
-- **Last Comment**: V7.13 design - Added Section 6 covering topological shape transformation rules and inverted corner masking to prevent future macro regressions.
+- **Version**: 81636d0
+- **Last Commit Date**: 2026-06-03 14:59:28 +0200
+- **Last Comment**: V7.14 design - Added explicit FreeCAD.Base namespace requirement for Matrix4x4 operations to Section 6. # Project Requirements: Shoulder Massage Tennis Ball Holder
 <!-- METADATA_END -->
 
 # Project Requirements: Shoulder Massage Tennis Ball Holder
