@@ -5,14 +5,14 @@
 # Last Comment: V7.6 design - Ellipsoid cups with fingerprint ridges, matched front-arm curvature, squat 68mm height.
 # METADATA_END
 
-# FreeCAD V7.6 Ellipsoid Cups & Ergonomic Blended Arm Massage Tool Macro
+# FreeCAD V7.11 Master Robust Arm & Separate Components Assembly Macro
 import FreeCAD as App
 import Part
 
 # Initialize Document
 doc = App.activeDocument()
 if not doc:
-    doc = App.newDocument("MassagerV76EllipsoidLayout")
+    doc = App.newDocument("MassagerV711Master")
 
 # Clean previous objects for a completely fresh build run
 objects_to_clear = [
@@ -21,78 +21,92 @@ objects_to_clear = [
     "YokeSolid", "YokeWithBores", "PedestalBlock", "PedestalPocket", "WheelPedestal",
     "LeftCupBlank", "LeftBallCut", "LeftCupBase", "RidgeLeft", "LeftCupTextured", "LeftAxle",
     "RightCupBlank", "RightBallCut", "RightCupBase", "RidgeRight", "RightCupTextured", "RightAxle",
-    "ArmShavingCylinder", "CurvedArmsFused", "RawArmsCombined", "YokeFuse1", "YokeP1",
+    "ArmTrimmingTool", "CurvedArmsClean", "RawArmsCombined", "YokeFuse1", "YokeP1",
     "YokeWithPedestal", "PinHoleCutout", "FinalWheelHousing", "WheelBlank", "WheelBore",
-    "FrontArmCutter", "YokeFrontCurved", "LeftCupEllipsoid", "RightCupEllipsoid"
+    "FrontArmCutter", "YokeFrontCurved", "LeftCupEllipsoid", "RightCupEllipsoid",
+    "TrimCylInner", "TrimBoxOuter"
 ]
 for name in objects_to_clear:
     if doc.getObject(name):
         doc.removeObject(name)
 
 # ==========================================
-# 1. GEOMETRY PARAMETERS (V7.6 Ergonomic)
+# 1. GEOMETRY PARAMETERS (V7.11 Master Specs)
 # ==========================================
-base_radius = 60.0       # 120mm diameter circular base
+base_radius = 60.0       # 120mm diameter base
 base_thickness = 15.0
 arm_thickness = 22.0
 arm_cavity = 82.0        
-arm_height = 68.0        # Reduced height to stay flush with the cup top crest
+arm_height = 68.0        # Squat height for structural stiffness
 arm_depth = 40.0         
 
 cup_diameter = 72.0
 cup_thickness = 25.0     # 64mm snap entry gap spacing
-ball_radius = 33.5       # Matches standard 67mm tennis ball
+ball_radius = 33.5       
 axle_radius = 4.0        
 axle_length = 15.0       
 
 wheel_radius = 6.0       # 12mm diameter wheel
 wheel_width = 16.0       
-pedestal_height = 12.0   # Double the wheel radius scale
+pedestal_height = 12.0   
 
 half_cavity = arm_cavity / 2.0
-rotation_axis_z = 45.0   # Lowered rotation center to maintain 68mm squat profile
+rotation_axis_z = 45.0   
 
 # ==========================================
-# 2. BUILD SOLID BASE & INTEGRATED CURVED ARMS
+# 2. BUILD ROUND BASE & FLUSH-TRIMMED SOLID ARMS
 # ==========================================
 round_base = doc.addObject("Part::Cylinder", "RoundBase")
 round_base.Radius = base_radius
 round_base.Height = base_thickness
 
+# Left Arm block - widened slightly along X to ensure clean trimming boundary coverage
 left_arm = doc.addObject("Part::Box", "LeftArmBlock")
-left_arm.Length = arm_thickness
+left_arm.Length = arm_thickness + 10.0
 left_arm.Width = arm_depth
 left_arm.Height = arm_height
 left_arm.Placement = App.Placement(App.Vector(-half_cavity - arm_thickness, -arm_depth/2.0, base_thickness), App.Rotation(0, 0, 0))
 
+# Right Arm block
 right_arm = doc.addObject("Part::Box", "RightArmBlock")
-right_arm.Length = arm_thickness
+right_arm.Length = arm_thickness + 10.0
 right_arm.Width = arm_depth
 right_arm.Height = arm_height
-right_arm.Placement = App.Placement(App.Vector(half_cavity, -arm_depth/2.0, base_thickness), App.Rotation(0, 0, 0))
+right_arm.Placement = App.Placement(App.Vector(half_cavity - 10.0, -arm_depth/2.0, base_thickness), App.Rotation(0, 0, 0))
 
 raw_arms = doc.addObject("Part::Fuse", "RawArmsCombined")
 raw_arms.Base = left_arm
 raw_arms.Tool = right_arm
 
-# Shave back outer arm faces to match base circular radius
-shaving_cyl = doc.addObject("Part::Cylinder", "ArmShavingCylinder")
-shaving_cyl.Radius = base_radius
-shaving_cyl.Height = arm_height + 20.0
-shaving_cyl.Placement = App.Placement(App.Vector(0, 0, base_thickness), App.Rotation(0, 0, 0))
+# MASKING TOOL: Create an outer trimming tool to shave off ONLY the overhanging square corners
+trim_cyl_inner = doc.addObject("Part::Cylinder", "TrimCylInner")
+trim_cyl_inner.Radius = base_radius
+trim_cyl_inner.Height = arm_height + 20.0
 
-curved_arms = doc.addObject("Part::Common", "CurvedArmsFused")
-curved_arms.Base = raw_arms
-curved_arms.Tool = shaving_cyl
+trim_box_outer = doc.addObject("Part::Box", "TrimBoxOuter")
+trim_box_outer.Length = base_radius * 3.0
+trim_box_outer.Width = base_radius * 3.0
+trim_box_outer.Height = arm_height + 30.0
+trim_box_outer.Placement = App.Placement(App.Vector(-base_radius * 1.5, -base_radius * 1.5, 0), App.Rotation(0,0,0))
 
-# Shave front arm profile to curve cleanly with the cup holders
+trim_tool = doc.addObject("Part::Cut", "ArmTrimmingTool")
+trim_tool.Base = trim_box_outer
+trim_tool.Tool = trim_cyl_inner
+trim_tool.Placement = App.Placement(App.Vector(0, 0, base_thickness), App.Rotation(0, 0, 0))
+
+# Cut the overhanging corners away from the arms
+curved_arms_clean = doc.addObject("Part::Cut", "CurvedArmsClean")
+curved_arms_clean.Base = raw_arms
+curved_arms_clean.Tool = trim_tool
+
+# Shave front arm profile with a smooth radius to cradle the cup holders elegantly
 front_cutter = doc.addObject("Part::Cylinder", "FrontArmCutter")
-front_cutter.Radius = cup_diameter / 2.0 + 2.0
-front_cutter.Height = arm_thickness * 3.0
-front_cutter.Placement = App.Placement(App.Vector(-arm_thickness*1.5, arm_depth/2.0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 90))
+front_cutter.Radius = cup_diameter / 2.0 + 1.0
+front_cutter.Height = 100.0
+front_cutter.Placement = App.Placement(App.Vector(-50.0, arm_depth/2.0 + 4.0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 90))
 
 yoke_front_curved = doc.addObject("Part::Cut", "YokeFrontCurved")
-yoke_front_curved.Base = curved_arms
+yoke_front_curved.Base = curved_arms_clean
 yoke_front_curved.Tool = front_cutter
 
 yoke_solid = doc.addObject("Part::Fuse", "YokeSolid")
@@ -100,7 +114,7 @@ yoke_solid.Base = round_base
 yoke_solid.Tool = yoke_front_curved
 
 # ==========================================
-# 3. EXTRA SUPPORT: 2X SCALED PEDESTAL HOUSING
+# 3. BUILD EXTRA SUPPORT: RAISED PEDESTAL HOUSING
 # ==========================================
 pedestal = doc.addObject("Part::Box", "PedestalBlock")
 pedestal.Length = 24.0
@@ -119,7 +133,7 @@ raw_housing.Base = pedestal
 raw_housing.Tool = pedestal_pocket
 
 pin_hole = doc.addObject("Part::Cylinder", "PinHoleCutout")
-pin_hole.Radius = 2.2    # 4.4mm hole for 4mm pivot pin clearance
+pin_hole.Radius = 2.2    # 4.4mm clear hole for 4mm filament pin axis
 pin_hole.Height = 40.0
 pin_hole.Placement = App.Placement(App.Vector(0, -20.0, base_thickness + wheel_radius), App.Rotation(App.Vector(1,0,0), 90))
 
@@ -172,13 +186,9 @@ center_wheel.Tool = wheel_bore
 # ==========================================
 # 6. BUILD LEFT ELLIPSOID CUP WITH FINGERPRINT GRIP
 # ==========================================
-# Generate base sphere to morph into an ellipsoid
 left_sph = doc.addObject("Part::Sphere", "LeftCupEllipsoid")
 left_sph.Radius = cup_diameter / 2.0
-# Scale X to make it thinner, scale Y and Z to keep strong equators
-left_sph.Scale = (0.7, 1.0, 1.0)
-
-# Shift and rotate ellipsoid base into position flush with inner left arm
+left_sph.Scale = (0.7, 1.0, 1.0) # Thick equator profile scaling
 left_sph.Placement = App.Placement(App.Vector(-half_cavity + 6.0, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 0))
 
 left_ball_cut = doc.addObject("Part::Sphere", "LeftBallCut")
@@ -189,7 +199,6 @@ left_cup_base = doc.addObject("Part::Cut", "LeftCupBase")
 left_cup_base.Base = left_sph
 left_cup_base.Tool = left_ball_cut
 
-# Concentric fingerprint ring ridges inside cavity
 ridge_left = doc.addObject("Part::Sphere", "RidgeLeft")
 ridge_left.Radius = ball_radius - 1.5
 ridge_left.Placement = App.Placement(App.Vector(0, 0, rotation_axis_z), App.Rotation(0, 0, 0))
@@ -241,7 +250,7 @@ right_cup.Base = right_cup_textured
 right_cup.Tool = right_axle
 
 # ==========================================
-# 8. ASSEMBLY RECOMPUTE COMPILATION
+# 8. ASSEMBLY COMPILATION
 # ==========================================
 assembly = doc.addObject("Part::Compound", "FinalAssembly")
 assembly.Links = [yoke_body, center_wheel, left_cup, right_cup]
@@ -253,4 +262,4 @@ for obj in doc.Objects:
 
 assembly.Visibility = True
 doc.recompute()
-App.Console.PrintMessage("FreeCAD V7.6 Continuous High Clearance Ellipsoid Assembly generated successfully!\n")
+App.Console.PrintMessage("FreeCAD V7.11 Master Assembly compiled successfully!\n")
