@@ -1,8 +1,8 @@
 # METADATA_START
 # File Name: tennis_ball_holder.FCMacro
-# Version: 6a44f45
-# Last Commit Date: 2026-06-03 12:22:07 +0200
-# Last Comment: V6 design - Round base, blind axle pockets, open-jaw narrow arms.
+# Version: d09e68f
+# Last Commit Date: 2026-06-03 14:24:27 +0200
+# Last Comment: V7.5 design - Separate print 12mm wheel, 2x scaled rugged pedestal housing.
 # METADATA_END
 
 # FreeCAD V7.5 Separate-Print Wheel & Double-Scaled Support Pedestal Macro
