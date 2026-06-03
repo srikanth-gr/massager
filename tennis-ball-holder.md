@@ -53,3 +53,15 @@ Before saving, executing, or committing any new FreeCAD Python macro scripts to 
 - [ ] **Sturdiness Optimization:** Confirm the arm height variables do not exceed $68\text{mm}$ to prevent turning the pillars into fragile levers that could snap under heavy body-weight compression.
 - [ ] **Component Separation:** Verify that the script instantiates the `CenterWheel`, `LeftCup`, and `RightCup` objects as distinct topological entities separated from the main unified base yoke, preventing them from fusing together during generation.
 - [ ] **Motion Dynamics Separation:** Confirm that the macro keeps rotation constraints isolated. The lower support wheel must be programmatically independent to rotate strictly on its horizontal Y-axis pin for X-axis ball travel, while the left and right cups are isolated as independent, free-spinning side-guides to prevent binding.
+
+## 6. CAD Implementation Architecture Notes (Lessons Learned)
+
+To prevent breaking geometry during future programmatic modifications or scaling changes, the FreeCAD script must adhere to the following architectural constraints discovered during development:
+
+### 1. Avoid Thin-Sliver Arm Geometry (The Intersection Bug)
+- **The Error:** Initially, cutting the support arms using `Part::Common` with a cylinder the exact diameter of the base caused the front and back corners of the arm blocks to shear off completely. This left structurally useless, paper-thin wall slivers.
+- **The Geometric Fix:** The arm blocks must be artificially inflated along the X-axis (`arm_thickness + 10.0`) so they completely cross the base circle boundary. A custom negative cookie-cutter mold (`ArmTrimmingTool`) is then built by subtracting a base-radius cylinder from a larger box volume. Performing a `Part::Cut` with this inverted mask removes only the overhanging exterior corner ears, preserving 100% of the structural wall thickness.
+
+### 2. Non-Uniform Primitive Scaling (The AttributeError Bug)
+- **The Error:** Attempting to assign a non-uniform scale directly to an active feature primitive property (e.g., `left_sph.Scale = (0.7, 1.0, 1.0)`) throws a Python interpreter `AttributeError`. Standard FreeCAD `Part` primitives do not expose a mutable scaling property.
+- **The Geometric Fix:** Ellipsoids must be generated at the pure topological shape level before being wrapped into a document feature. The script instantiates a basic shape using `Part.makeSphere()`, creates a geometric matrix transformation object (`App.Matrix4x4()`), applies `.scale(x, y, z)` to the matrix, transforms the underlying shape via `.transformShape()`, and only then binds the resulting unique shape to a generic `Part::Feature`.
