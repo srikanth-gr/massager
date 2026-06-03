@@ -1,8 +1,8 @@
 <!-- METADATA_START -->
 - **File Name**: tennis-ball-holder.md
-- **Version**: c5d7694
-- **Last Commit Date**: 2026-06-03 15:17:26 +0200
-- **Last Comment**: fix: resolve component merging bugs by realigning cup translation vectors
+- **Version**: 8a29317
+- **Last Commit Date**: 2026-06-03 15:20:43 +0200
+- **Last Comment**: V7.17 design - Corrected side cup local axle rotation values and squared up pedestal depth alignment rules.
 <!-- METADATA_END -->
 
 # Project Requirements: Shoulder Massage Tennis Ball Holder
