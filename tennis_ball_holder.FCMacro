@@ -1,8 +1,8 @@
 # METADATA_START
 # File Name: tennis_ball_holder.FCMacro
-# Version: 4d7323e
-# Last Commit Date: 2026-06-03 15:10:46 +0200
-# Last Comment: fix: resolve C++ wrapper crash by moving from Matrix4x4 to core Base.Matrix constructor
+# Version: c5d7694
+# Last Commit Date: 2026-06-03 15:17:26 +0200
+# Last Comment: fix: resolve component merging bugs by realigning cup translation vectors
 # METADATA_END
 
 # FreeCAD V7.16 Assembly Clearance Correction Macro
