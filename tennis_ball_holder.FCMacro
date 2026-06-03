@@ -1,0 +1,86 @@
+<!-- METADATA_START -->
+- **File Name**: 
+- **Version**: 
+- **Last Commit Date**: 
+- **Last Comment**: 
+<!-- METADATA_END -->
+# FreeCAD V4 Saddle Rail Yoke Massage Tool Macro
+import FreeCAD as App
+import Part
+
+# Initialize Document
+doc = App.activeDocument()
+if not doc:
+    doc = App.newDocument("MassagerV4SaddleRail")
+
+# Clean previous objects for a fresh run
+objects_to_clear = ["FinalAssembly", "MassagerBase", "LeftTower", "RightTower", "YokeSolid", "BallSaddleCutout", "TopSnapClip", "MainYokeBody"]
+for name in objects_to_clear:
+    if doc.getObject(name):
+        doc.removeObject(name)
+
+# 1. Base Footprint Foundation
+base_plate = doc.addObject("Part::Box", "MassagerBase")
+base_plate.Length = 110.0   # 110mm width
+base_plate.Width = 80.0     # 80mm depth
+base_plate.Height = 15.0    # 15mm heavy duty thickness
+base_plate.Placement = App.Placement(App.Vector(-55, -40, 0), App.Rotation(0, 0, 0))
+
+# 2. Support Towers (Spaced tightly to create the 6mm saddle channels on the inner faces)
+# Standard tennis ball diameter is 67mm.
+# Placing the 22mm thick towers at an offset creates an intentional overlap for the saddle rails.
+left_tower = doc.addObject("Part::Box", "LeftTower")
+left_tower.Length = 22.0
+left_tower.Width = 70.0
+left_tower.Height = 65.0
+left_tower.Placement = App.Placement(App.Vector(-49.5, -35, 15), App.Rotation(0, 0, 0))
+
+right_tower = doc.addObject("Part::Box", "RightTower")
+right_tower.Length = 22.0
+right_tower.Width = 70.0
+right_tower.Height = 65.0
+right_tower.Placement = App.Placement(App.Vector(27.5, -35, 15), App.Rotation(0, 0, 0))
+
+# Fuse the base and the towers into one rigid yoke structure
+yoke_fuse = doc.addObject("Part::Fuse", "YokeSolid")
+yoke_fuse.Base = base_plate
+yoke_fuse.Tool = left_tower
+
+yoke_solid_body = doc.addObject("Part::Fuse", "MainYokeBody")
+yoke_solid_body.Base = yoke_fuse
+yoke_solid_body.Tool = right_tower
+
+# 3. Generating the 6mm Saddle Rail Channels via Ball Intersection Cutout
+# Spherical cutout radius = 33.5mm (67mm diameter tennis ball)
+ball_saddle_cutout = doc.addObject("Part::Sphere", "BallSaddleCutout")
+ball_saddle_cutout.Radius = 33.5
+ball_saddle_cutout.Placement = App.Placement(App.Vector(0, 0, 48), App.Rotation(0, 0, 0))
+
+# The Boolean Cut leaves precise concave curved rails on the inner faces of both towers
+final_yoke = doc.addObject("Part::Cut", "FinalYokeBody")
+final_yoke.Base = yoke_solid_body
+final_yoke.Tool = ball_saddle_cutout
+
+# 4. Top Snap Clip Enclosure Latch
+# This creates a structural brace bridging across the top of the open yoke
+snap_clip = doc.addObject("Part::Box", "TopSnapClip")
+snap_clip.Length = 101.0
+snap_clip.Width = 40.0
+snap_clip.Height = 8.0
+# Positioned exactly on top of the towers to secure the ball against upward ejection forces
+snap_clip.Placement = App.Placement(App.Vector(-50.5, -20, 80), App.Rotation(0, 0, 0))
+
+# Group everything into a single operational view group
+assembly = doc.addObject("Part::Compound", "FinalAssembly")
+assembly.Links = [final_yoke, snap_clip]
+
+# --- UI Visibility Management ---
+# Hide construction steps
+for obj in [base_plate, left_tower, right_tower, yoke_fuse, yoke_solid_body, ball_saddle_cutout, final_yoke, snap_clip]:
+    obj.Visibility = False
+
+# Show full V4 layout
+assembly.Visibility = True
+
+doc.recompute()
+App.Console.PrintMessage("FreeCAD V4 Saddle Rail & Snap Clip MVP generated successfully!\n")

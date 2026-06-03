@@ -1,32 +1,42 @@
 <!-- METADATA_START -->
 - **File Name**: tennis-ball-holder.md
-- **Version**: fac7894
-- **Last Commit Date**: 2026-06-03 10:33:54 +0200
-- **Last Comment**: Meta data fields - blank.
+- **Version**: fac7895
+- **Last Commit Date**: 2026-06-03
+- **Last Comment**: V4 design - saddle rail system, snap clip enclosure.
 <!-- METADATA_END -->
+
 # Project Requirements: Shoulder Massage Tennis Ball Holder
 
 ## 1. Functional Objective
-The goal is to design a heavy-duty, mechanical shoulder massage tool that holds a standard tennis ball. The device must allow the ball to roll smoothly under load to relieve deep muscle tension, shifting away from a static cup design to a dynamic, low-friction roller system.
+Design a heavy-duty mechanical shoulder massage tool that holds a standard tennis ball. The ball must roll smoothly under full body weight load to relieve deep muscle tension. The design uses a passive concave saddle rail system for constrained single-axis rolling with no axle or hardware passing through or contacting the ball.
 
 ## 2. Mechanical Design & Motion Profile
-*   **Axis of Rotation:** Single-axis tracking. The ball must spin strictly in place along the horizontal **X-axis** (acting like a wheel/roller) to follow the specific stroke direction of a shoulder massage.
-*   **Load-Bearing Architecture:** Over-center yoke design. The support arms extend past the vertical equator (halfway mark) of the ball, creating a physical cradle that traps the ball securely.
-*   **Axle Mechanics:** Continuous through-axle channel. Uses a straight horizontal bore (8.4mm diameter) across both arms and the center of the ball. This accommodates an M8 steel bolt or threaded rod, moving 100% of the mechanical pressure off the plastic parts and onto the metal core.
+- Axis of Rotation: Single-axis (X-axis). The ball spins in place like a wheel/roller to follow shoulder stroke direction.
+- Retention System: Concave saddle rail. Each yoke arm has a curved inner channel (6mm deep, radius matching ball curvature) that cradles the ball along a line of contact. No axle, no pins, no hardware near the ball cavity.
+- Top Enclosure: Snap clip latch across the top of the yoke. Prevents vertical ejection of the ball under downward or lateral body weight load.
 
 ## 3. Structural Integrity & Rigidity
-*   **Load Support:** The structure must survive full human body weight pressed against a wall or floor without fracturing, slipping, or delaminating.
-*   **Component Dimensions (MVP Layout):**
-    *   **Base Footprint:** Thick stabilizing foundation block (110mm x 80mm).
-    *   **Base Thickness:** Minimum 15mm solid thickness to eliminate flex under load.
-    *   **Support Towers (Yoke):** Reinforced vertical side walls (22mm thickness each).
-*   **Ball Cavity:** A central spherical cutout with a 33.5mm radius, optimized to cradle a standard 67mm diameter tennis ball with minimal friction.
+- Load Support: Must survive full human body weight pressed against a wall or floor without fracture, slip, or delamination.
+- Component Dimensions (V4 Layout):
+  - Base Footprint: 110mm x 80mm stabilizing foundation block.
+  - Base Thickness: 15mm minimum solid thickness.
+  - Support Towers (Yoke): 22mm thick reinforced vertical side walls.
+  - Saddle Rail Depth: 6mm concave channel on each arm inner face.
+  - Ball Cavity: Spherical cutout at 33.5mm radius (67mm diameter tennis ball).
+- No through-bore. The ball cavity is fully open on the axle axis; retention is handled entirely by the saddle rails and snap clip.
 
 ## 4. Software & CAD Strategy
-*   **Environment:** FreeCAD (Python Macro Automation).
-*   **API Compatibility:** Scripted exclusively using `Part` workbench primitives (`Part::Box`, `Part::Cylinder`, `Part::Sphere`) and core boolean operations (`Part::Fuse`, `Part::Cut`). This approach avoids version-specific `PartDesign` workbench dependencies and prevents script crashes across different software builds.
+- Environment: FreeCAD (Python Macro Automation).
+- API Compatibility: Scripted using Part workbench primitives (Part::Box, Part::Cylinder, Part::Sphere) and boolean operations (Part::Fuse, Part::Cut). No PartDesign workbench dependencies.
+- Saddle Rail Geometry: Modelled as a Part::Sphere boolean cut along each arm inner face, radius 33.5mm, depth 6mm, centered on ball equator.
+- Snap Clip: Modelled as a thin Part::Box bridge across the yoke top with a small interference-fit notch for retention.
 
-## 5. Design History & Evolution
-1.  **V1 (Static Cup):** A single-piece solid cylinder design meant to hold the ball passively. (Superseded to enable ball rolling).
-2.  **V2 (Vertical Pin Pivot):** A two-part assembly featuring a base pin and a free-spinning dual-claw arm tracking 360-degree rotation. (Superseded due to load limitations and risk of the ball slipping under body weight).
-3.  **V3 (Industrial Over-Center Yoke MVP):** The current heavy-duty design featuring thick 22mm arms and a continuous metal through-bolt along the X-axis for maximum strength and constrained tracking.
+## 5. FreeCAD Python Macro
+Will be maintained in a separate file outside this md.
+
+
+## 6. Design History & Evolution
+1. V1 (Static Cup): Single-piece solid cylinder holding the ball passively. Superseded to enable rolling.
+2. V2 (Vertical Pin Pivot): Two-part assembly with base pin and free-spinning dual-claw arm for 360-degree rotation. Superseded due to load limitations and ball slip risk.
+3. V3 (Industrial Over-Center Yoke MVP): Thick 22mm arms with continuous metal through-bolt on X-axis. Superseded because the through-axle blocks a real tennis ball from being mounted.
+4. V4 (Saddle Rail Yoke): Current design. No axle or hardware contacts the ball. Retention via 6mm deep concave saddle rails on each arm inner face plus a snap clip latch across the yoke top. Smooth controlled X-axis roll under full body weight.
