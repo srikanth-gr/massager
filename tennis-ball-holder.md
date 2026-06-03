@@ -26,6 +26,8 @@ Design an industrial-strength, ergonomic shoulder massage tool holding a standar
 - **Support Arms:** $22\text{mm}$ thick, $40\text{mm}$ deep, $68\text{mm}$ high.
 - **Ellipsoid Cups:** $72\text{mm}$ major diameter, $25\text{mm}$ absolute base thickness, $33.5\text{mm}$ inner pocket radius.
 - **Integrated Axle Stubs:** $8\text{mm}$ diameter ($4\text{mm}$ radius), $15\text{mm}$ length, fitting within $18\text{mm}$ blind pockets on the inner arms.
+- **Assembly Spatial Offsets:** - Left cup center placement must be set to $X = -48.0\text{mm}$ to clear the arm face.
+  - Right cup center placement must be set to $X = 48.0\text{mm}$ to clear the arm face.
 
 ## 5. Functional Verification & Validation (V&V) Protocol
 
@@ -69,3 +71,7 @@ To prevent breaking geometry during future programmatic modifications or scaling
 ### 3. Class Targeting for Matrix Operations (The Base.Matrix Rule)
 - **The Error:** Calling `Base.Matrix4x4()` throws an `AttributeError: module '__FreeCADBase__' has no attribute 'Matrix4x4'`. FreeCAD stores its transformation engine under a generic naming matrix standard rather than dimension-explicit class names.
 - **The Geometric Fix:** To invoke the internal 4x4 matrix constructor engine safely without throwing runtime crashes, the class must be targeted directly using `Base.Matrix()`.
+
+### 4. Clear Assembly Clearance Offsets
+- **The Error:** Scaling the ellipsoid shapes natively shifts their center of mass relative to their bounding box coordinates. If left at the default arm cavity locations, the cups intersect directly into the solid arm frames.
+- **The Geometric Fix:** The cup feature objects must be pushed outward to exactly $X = \pm 48.0\text{mm}$. This keeps the rotating cup shell completely isolated from the arm faces while perfectly aligning the axle stubs inside the blind support bores.

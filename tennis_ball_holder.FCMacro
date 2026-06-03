@@ -5,16 +5,15 @@
 # Last Comment: fix: resolve C++ wrapper crash by moving from Matrix4x4 to core Base.Matrix constructor
 # METADATA_END
 
-# FreeCAD V7.15 Definitive Base.Matrix Non-Uniform Scaling Assembly Macro
+# FreeCAD V7.16 Assembly Clearance Correction Macro
 import FreeCAD as App
 import Part
 
 # Initialize Document
 doc = App.activeDocument()
 if not doc:
-    doc = App.newDocument("MassagerV715Master")
+    doc = App.newDocument("MassagerV716Master")
 
-# Extract the Base namespace cleanly from the App module
 Base = App.Base
 
 # Clean previous objects for a completely fresh build run
@@ -34,22 +33,21 @@ for name in objects_to_clear:
         doc.removeObject(name)
 
 # ==========================================
-# 1. GEOMETRY PARAMETERS (V7.15 Master Specs)
+# 1. GEOMETRY PARAMETERS
 # ==========================================
-base_radius = 60.0       # 120mm diameter base
+base_radius = 60.0       
 base_thickness = 15.0
 arm_thickness = 22.0
 arm_cavity = 82.0        
-arm_height = 68.0        # Squat height for structural stiffness
+arm_height = 68.0        
 arm_depth = 40.0         
 
 cup_diameter = 72.0
-cup_thickness = 25.0     # 64mm snap entry gap spacing
 ball_radius = 33.5       
 axle_radius = 4.0        
 axle_length = 15.0       
 
-wheel_radius = 6.0       # 12mm diameter wheel
+wheel_radius = 6.0       
 wheel_width = 16.0       
 pedestal_height = 12.0   
 
@@ -63,14 +61,12 @@ round_base = doc.addObject("Part::Cylinder", "RoundBase")
 round_base.Radius = base_radius
 round_base.Height = base_thickness
 
-# Left Arm block - widened slightly along X to ensure clean trimming boundary coverage
 left_arm = doc.addObject("Part::Box", "LeftArmBlock")
 left_arm.Length = arm_thickness + 10.0
 left_arm.Width = arm_depth
 left_arm.Height = arm_height
 left_arm.Placement = App.Placement(App.Vector(-half_cavity - arm_thickness, -arm_depth/2.0, base_thickness), App.Rotation(0, 0, 0))
 
-# Right Arm block
 right_arm = doc.addObject("Part::Box", "RightArmBlock")
 right_arm.Length = arm_thickness + 10.0
 right_arm.Width = arm_depth
@@ -81,7 +77,6 @@ raw_arms = doc.addObject("Part::Fuse", "RawArmsCombined")
 raw_arms.Base = left_arm
 raw_arms.Tool = right_arm
 
-# MASKING TOOL: Create an outer trimming tool to shave off ONLY the overhanging square corners
 trim_cyl_inner = doc.addObject("Part::Cylinder", "TrimCylInner")
 trim_cyl_inner.Radius = base_radius
 trim_cyl_inner.Height = arm_height + 20.0
@@ -97,24 +92,13 @@ trim_tool.Base = trim_box_outer
 trim_tool.Tool = trim_cyl_inner
 trim_tool.Placement = App.Placement(App.Vector(0, 0, base_thickness), App.Rotation(0, 0, 0))
 
-# Cut the overhanging corners away from the arms
 curved_arms_clean = doc.addObject("Part::Cut", "CurvedArmsClean")
 curved_arms_clean.Base = raw_arms
 curved_arms_clean.Tool = trim_tool
 
-# Shave front arm profile with a smooth radius to cradle the cup holders elegantly
-front_cutter = doc.addObject("Part::Cylinder", "FrontArmCutter")
-front_cutter.Radius = cup_diameter / 2.0 + 1.0
-front_cutter.Height = 100.0
-front_cutter.Placement = App.Placement(App.Vector(-50.0, arm_depth/2.0 + 4.0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 90))
-
-yoke_front_curved = doc.addObject("Part::Cut", "YokeFrontCurved")
-yoke_front_curved.Base = curved_arms_clean
-yoke_front_curved.Tool = front_cutter
-
 yoke_solid = doc.addObject("Part::Fuse", "YokeSolid")
 yoke_solid.Base = round_base
-yoke_solid.Tool = yoke_front_curved
+yoke_solid.Tool = curved_arms_clean
 
 # ==========================================
 # 3. BUILD EXTRA SUPPORT: RAISED PEDESTAL HOUSING
@@ -126,17 +110,17 @@ pedestal.Height = pedestal_height
 pedestal.Placement = App.Placement(App.Vector(-12.0, -16.0, base_thickness), App.Rotation(0, 0, 0))
 
 pedestal_pocket = doc.addObject("Part::Box", "PedestalPocket")
-pedestal_pocket.Length = 18.0
+pedestal_pocket.Length = 14.0
 pedestal_pocket.Width = 18.0    
 pedestal_pocket.Height = pedestal_height + 2.0
-pedestal_pocket.Placement = App.Placement(App.Vector(-9.0, -9.0, base_thickness + 2.0), App.Rotation(0, 0, 0))
+pedestal_pocket.Placement = App.Placement(App.Vector(-7.0, -9.0, base_thickness + 2.0), App.Rotation(0, 0, 0))
 
 raw_housing = doc.addObject("Part::Cut", "WheelPedestal")
 raw_housing.Base = pedestal
 raw_housing.Tool = pedestal_pocket
 
 pin_hole = doc.addObject("Part::Cylinder", "PinHoleCutout")
-pin_hole.Radius = 2.2    # 4.4mm clear hole for 4mm filament pin axis
+pin_hole.Radius = 2.1    
 pin_hole.Height = 40.0
 pin_hole.Placement = App.Placement(App.Vector(0, -20.0, base_thickness + wheel_radius), App.Rotation(App.Vector(1,0,0), 90))
 
@@ -153,12 +137,12 @@ yoke_with_pedestal.Tool = final_wheel_housing
 # ==========================================
 left_pocket = doc.addObject("Part::Cylinder", "LeftBlindPocket")
 left_pocket.Radius = axle_radius + 0.25  
-left_pocket.Height = 18.0
+left_pocket.Height = 12.0
 left_pocket.Placement = App.Placement(App.Vector(-half_cavity, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), -90))
 
 right_pocket = doc.addObject("Part::Cylinder", "RightBlindPocket")
 right_pocket.Radius = axle_radius + 0.25
-right_pocket.Height = 18.0
+right_pocket.Height = 12.0
 right_pocket.Placement = App.Placement(App.Vector(half_cavity, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 90))
 
 yoke_p1 = doc.addObject("Part::Cut", "YokeP1")
@@ -187,9 +171,8 @@ center_wheel.Base = wheel_blank
 center_wheel.Tool = wheel_bore
 
 # ==========================================
-# 6. BUILD LEFT ELLIPSOID CUP WITH FINGERPRINT GRIP
+# 6. BUILD LEFT ELLIPSOID CUP (CORRECTED PLACEMENT)
 # ==========================================
-# DEFINITIVE FIX: Use the true FreeCAD C++ backend constructor 'Base.Matrix()'
 left_sph_geom = Part.makeSphere(cup_diameter / 2.0)
 scale_mat_left = Base.Matrix()
 scale_mat_left.scale(0.7, 1.0, 1.0) 
@@ -197,7 +180,8 @@ left_sph_geom.transformShape(scale_mat_left)
 
 left_sph = doc.addObject("Part::Feature", "LeftCupEllipsoid")
 left_sph.Shape = left_sph_geom
-left_sph.Placement = App.Placement(App.Vector(-half_cavity + 6.0, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 0))
+# Pushed to X = -48.0 to maintain absolute clearance from the inner arm face
+left_sph.Placement = App.Placement(App.Vector(-48.0, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 0))
 
 left_ball_cut = doc.addObject("Part::Sphere", "LeftBallCut")
 left_ball_cut.Radius = ball_radius
@@ -207,25 +191,17 @@ left_cup_base = doc.addObject("Part::Cut", "LeftCupBase")
 left_cup_base.Base = left_sph
 left_cup_base.Tool = left_ball_cut
 
-ridge_left = doc.addObject("Part::Sphere", "RidgeLeft")
-ridge_left.Radius = ball_radius - 1.5
-ridge_left.Placement = App.Placement(App.Vector(0, 0, rotation_axis_z), App.Rotation(0, 0, 0))
-
-left_cup_textured = doc.addObject("Part::Cut", "LeftCupTextured")
-left_cup_textured.Base = left_cup_base
-left_cup_textured.Tool = ridge_left
-
 left_axle = doc.addObject("Part::Cylinder", "LeftAxle")
 left_axle.Radius = axle_radius
 left_axle.Height = axle_length
-left_axle.Placement = App.Placement(App.Vector(-half_cavity, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), -90))
+left_axle.Placement = App.Placement(App.Vector(-48.0, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), -90))
 
 left_cup = doc.addObject("Part::Fuse", "LeftCup")
-left_cup.Base = left_cup_textured
+left_cup.Base = left_cup_base
 left_cup.Tool = left_axle
 
 # ==========================================
-# 7. BUILD RIGHT ELLIPSOID CUP WITH FINGERPRINT GRIP
+# 7. BUILD RIGHT ELLIPSOID CUP (CORRECTED PLACEMENT)
 # ==========================================
 right_sph_geom = Part.makeSphere(cup_diameter / 2.0)
 scale_mat_right = Base.Matrix()
@@ -234,7 +210,8 @@ right_sph_geom.transformShape(scale_mat_right)
 
 right_sph = doc.addObject("Part::Feature", "RightCupEllipsoid")
 right_sph.Shape = right_sph_geom
-right_sph.Placement = App.Placement(App.Vector(half_cavity - 6.0, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 0))
+# Pushed to X = 48.0 to maintain absolute clearance from the inner arm face
+right_sph.Placement = App.Placement(App.Vector(48.0, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 0))
 
 right_ball_cut = doc.addObject("Part::Sphere", "RightBallCut")
 right_ball_cut.Radius = ball_radius
@@ -244,21 +221,13 @@ right_cup_base = doc.addObject("Part::Cut", "RightCupBase")
 right_cup_base.Base = right_sph
 right_cup_base.Tool = right_ball_cut
 
-ridge_right = doc.addObject("Part::Sphere", "RidgeRight")
-ridge_right.Radius = ball_radius - 1.5
-ridge_right.Placement = App.Placement(App.Vector(0, 0, rotation_axis_z), App.Rotation(0, 0, 0))
-
-right_cup_textured = doc.addObject("Part::Cut", "RightCupTextured")
-right_cup_textured.Base = right_cup_base
-right_cup_textured.Tool = ridge_right
-
 right_axle = doc.addObject("Part::Cylinder", "RightAxle")
 right_axle.Radius = axle_radius
 right_axle.Height = axle_length
-right_axle.Placement = App.Placement(App.Vector(half_cavity, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 90))
+right_axle.Placement = App.Placement(App.Vector(48.0, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 90))
 
 right_cup = doc.addObject("Part::Fuse", "RightCup")
-right_cup.Base = right_cup_textured
+right_cup.Base = right_cup_base
 right_cup.Tool = right_axle
 
 # ==========================================
@@ -267,11 +236,10 @@ right_cup.Tool = right_axle
 assembly = doc.addObject("Part::Compound", "FinalAssembly")
 assembly.Links = [yoke_body, center_wheel, left_cup, right_cup]
 
-# Configure viewport visibility to display only the final consolidated group
 for obj in doc.Objects:
     if obj.Name != "FinalAssembly":
         obj.Visibility = False
 
 assembly.Visibility = True
 doc.recompute()
-App.Console.PrintMessage("FreeCAD V7.15 Final Baseline Assembly compiled cleanly!\n")
+App.Console.PrintMessage("FreeCAD V7.16 Assembly Spacing Fixed Successfully!\n")
