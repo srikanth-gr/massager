@@ -5,14 +5,14 @@
 # Last Comment: V7.11 design - Fully unified file containing behavioral V&V protocols and programmatic code review gates.
 # METADATA_END
 
-# FreeCAD V7.12 Fixed Matrix-Scaled Ellipsoid Cups Macro
+# FreeCAD V7.13 Master Robust Arm & Matrix-Scaled Ellipsoid Assembly Macro
 import FreeCAD as App
 import Part
 
 # Initialize Document
 doc = App.activeDocument()
 if not doc:
-    doc = App.newDocument("MassagerV712Master")
+    doc = App.newDocument("MassagerV713Master")
 
 # Clean previous objects for a completely fresh build run
 objects_to_clear = [
@@ -31,7 +31,7 @@ for name in objects_to_clear:
         doc.removeObject(name)
 
 # ==========================================
-# 1. GEOMETRY PARAMETERS (V7.12 Master Specs)
+# 1. GEOMETRY PARAMETERS (V7.13 Master Specs)
 # ==========================================
 base_radius = 60.0       # 120mm diameter base
 base_thickness = 15.0
@@ -60,12 +60,14 @@ round_base = doc.addObject("Part::Cylinder", "RoundBase")
 round_base.Radius = base_radius
 round_base.Height = base_thickness
 
+# Left Arm block - widened slightly along X to ensure clean trimming boundary coverage
 left_arm = doc.addObject("Part::Box", "LeftArmBlock")
 left_arm.Length = arm_thickness + 10.0
 left_arm.Width = arm_depth
 left_arm.Height = arm_height
 left_arm.Placement = App.Placement(App.Vector(-half_cavity - arm_thickness, -arm_depth/2.0, base_thickness), App.Rotation(0, 0, 0))
 
+# Right Arm block
 right_arm = doc.addObject("Part::Box", "RightArmBlock")
 right_arm.Length = arm_thickness + 10.0
 right_arm.Width = arm_depth
@@ -76,6 +78,7 @@ raw_arms = doc.addObject("Part::Fuse", "RawArmsCombined")
 raw_arms.Base = left_arm
 raw_arms.Tool = right_arm
 
+# MASKING TOOL: Create an outer trimming tool to shave off ONLY the overhanging square corners
 trim_cyl_inner = doc.addObject("Part::Cylinder", "TrimCylInner")
 trim_cyl_inner.Radius = base_radius
 trim_cyl_inner.Height = arm_height + 20.0
@@ -91,10 +94,12 @@ trim_tool.Base = trim_box_outer
 trim_tool.Tool = trim_cyl_inner
 trim_tool.Placement = App.Placement(App.Vector(0, 0, base_thickness), App.Rotation(0, 0, 0))
 
+# Cut the overhanging corners away from the arms
 curved_arms_clean = doc.addObject("Part::Cut", "CurvedArmsClean")
 curved_arms_clean.Base = raw_arms
 curved_arms_clean.Tool = trim_tool
 
+# Shave front arm profile with a smooth radius to cradle the cup holders elegantly
 front_cutter = doc.addObject("Part::Cylinder", "FrontArmCutter")
 front_cutter.Radius = cup_diameter / 2.0 + 1.0
 front_cutter.Height = 100.0
@@ -128,7 +133,7 @@ raw_housing.Base = pedestal
 raw_housing.Tool = pedestal_pocket
 
 pin_hole = doc.addObject("Part::Cylinder", "PinHoleCutout")
-pin_hole.Radius = 2.2    
+pin_hole.Radius = 2.2    # 4.4mm clear hole for 4mm filament pin axis
 pin_hole.Height = 40.0
 pin_hole.Placement = App.Placement(App.Vector(0, -20.0, base_thickness + wheel_radius), App.Rotation(App.Vector(1,0,0), 90))
 
@@ -181,10 +186,10 @@ center_wheel.Tool = wheel_bore
 # ==========================================
 # 6. BUILD LEFT ELLIPSOID CUP WITH FINGERPRINT GRIP
 # ==========================================
-# FIXED: Create a sphere geometry, scale its shape using a 4x4 matrix, then assign to a feature object
+# FIX: Instantiate raw sphere shape geometry and scale via a non-uniform 4x4 matrix transformation
 left_sph_geom = Part.makeSphere(cup_diameter / 2.0)
 scale_mat_left = App.Matrix4x4()
-scale_mat_left.scale(0.7, 1.0, 1.0)
+scale_mat_left.scale(0.7, 1.0, 1.0) # Organic narrowing along X for high equator thickness
 left_sph_geom.transformShape(scale_mat_left)
 
 left_sph = doc.addObject("Part::Feature", "LeftCupEllipsoid")
@@ -266,4 +271,4 @@ for obj in doc.Objects:
 
 assembly.Visibility = True
 doc.recompute()
-App.Console.PrintMessage("FreeCAD V7.12 Fixed Master Assembly compiled successfully!\n")
+App.Console.PrintMessage("FreeCAD V7.13 Unified Master Layout generated successfully!\n")
