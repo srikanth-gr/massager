@@ -5,14 +5,14 @@
 # Last Comment: V7.11 design - Fully unified file containing behavioral V&V protocols and programmatic code review gates.
 # METADATA_END
 
-# FreeCAD V7.11 Master Robust Arm & Separate Components Assembly Macro
+# FreeCAD V7.12 Fixed Matrix-Scaled Ellipsoid Cups Macro
 import FreeCAD as App
 import Part
 
 # Initialize Document
 doc = App.activeDocument()
 if not doc:
-    doc = App.newDocument("MassagerV711Master")
+    doc = App.newDocument("MassagerV712Master")
 
 # Clean previous objects for a completely fresh build run
 objects_to_clear = [
@@ -24,14 +24,14 @@ objects_to_clear = [
     "ArmTrimmingTool", "CurvedArmsClean", "RawArmsCombined", "YokeFuse1", "YokeP1",
     "YokeWithPedestal", "PinHoleCutout", "FinalWheelHousing", "WheelBlank", "WheelBore",
     "FrontArmCutter", "YokeFrontCurved", "LeftCupEllipsoid", "RightCupEllipsoid",
-    "TrimCylInner", "TrimBoxOuter"
+    "TrimCylInner", "TrimBoxOuter", "LeftScaledShape", "RightScaledShape"
 ]
 for name in objects_to_clear:
     if doc.getObject(name):
         doc.removeObject(name)
 
 # ==========================================
-# 1. GEOMETRY PARAMETERS (V7.11 Master Specs)
+# 1. GEOMETRY PARAMETERS (V7.12 Master Specs)
 # ==========================================
 base_radius = 60.0       # 120mm diameter base
 base_thickness = 15.0
@@ -60,14 +60,12 @@ round_base = doc.addObject("Part::Cylinder", "RoundBase")
 round_base.Radius = base_radius
 round_base.Height = base_thickness
 
-# Left Arm block - widened slightly along X to ensure clean trimming boundary coverage
 left_arm = doc.addObject("Part::Box", "LeftArmBlock")
 left_arm.Length = arm_thickness + 10.0
 left_arm.Width = arm_depth
 left_arm.Height = arm_height
 left_arm.Placement = App.Placement(App.Vector(-half_cavity - arm_thickness, -arm_depth/2.0, base_thickness), App.Rotation(0, 0, 0))
 
-# Right Arm block
 right_arm = doc.addObject("Part::Box", "RightArmBlock")
 right_arm.Length = arm_thickness + 10.0
 right_arm.Width = arm_depth
@@ -78,7 +76,6 @@ raw_arms = doc.addObject("Part::Fuse", "RawArmsCombined")
 raw_arms.Base = left_arm
 raw_arms.Tool = right_arm
 
-# MASKING TOOL: Create an outer trimming tool to shave off ONLY the overhanging square corners
 trim_cyl_inner = doc.addObject("Part::Cylinder", "TrimCylInner")
 trim_cyl_inner.Radius = base_radius
 trim_cyl_inner.Height = arm_height + 20.0
@@ -94,12 +91,10 @@ trim_tool.Base = trim_box_outer
 trim_tool.Tool = trim_cyl_inner
 trim_tool.Placement = App.Placement(App.Vector(0, 0, base_thickness), App.Rotation(0, 0, 0))
 
-# Cut the overhanging corners away from the arms
 curved_arms_clean = doc.addObject("Part::Cut", "CurvedArmsClean")
 curved_arms_clean.Base = raw_arms
 curved_arms_clean.Tool = trim_tool
 
-# Shave front arm profile with a smooth radius to cradle the cup holders elegantly
 front_cutter = doc.addObject("Part::Cylinder", "FrontArmCutter")
 front_cutter.Radius = cup_diameter / 2.0 + 1.0
 front_cutter.Height = 100.0
@@ -133,7 +128,7 @@ raw_housing.Base = pedestal
 raw_housing.Tool = pedestal_pocket
 
 pin_hole = doc.addObject("Part::Cylinder", "PinHoleCutout")
-pin_hole.Radius = 2.2    # 4.4mm clear hole for 4mm filament pin axis
+pin_hole.Radius = 2.2    
 pin_hole.Height = 40.0
 pin_hole.Placement = App.Placement(App.Vector(0, -20.0, base_thickness + wheel_radius), App.Rotation(App.Vector(1,0,0), 90))
 
@@ -186,9 +181,14 @@ center_wheel.Tool = wheel_bore
 # ==========================================
 # 6. BUILD LEFT ELLIPSOID CUP WITH FINGERPRINT GRIP
 # ==========================================
-left_sph = doc.addObject("Part::Sphere", "LeftCupEllipsoid")
-left_sph.Radius = cup_diameter / 2.0
-left_sph.Scale = (0.7, 1.0, 1.0) # Thick equator profile scaling
+# FIXED: Create a sphere geometry, scale its shape using a 4x4 matrix, then assign to a feature object
+left_sph_geom = Part.makeSphere(cup_diameter / 2.0)
+scale_mat_left = App.Matrix4x4()
+scale_mat_left.scale(0.7, 1.0, 1.0)
+left_sph_geom.transformShape(scale_mat_left)
+
+left_sph = doc.addObject("Part::Feature", "LeftCupEllipsoid")
+left_sph.Shape = left_sph_geom
 left_sph.Placement = App.Placement(App.Vector(-half_cavity + 6.0, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 0))
 
 left_ball_cut = doc.addObject("Part::Sphere", "LeftBallCut")
@@ -219,9 +219,13 @@ left_cup.Tool = left_axle
 # ==========================================
 # 7. BUILD RIGHT ELLIPSOID CUP WITH FINGERPRINT GRIP
 # ==========================================
-right_sph = doc.addObject("Part::Sphere", "RightCupEllipsoid")
-right_sph.Radius = cup_diameter / 2.0
-right_sph.Scale = (0.7, 1.0, 1.0)
+right_sph_geom = Part.makeSphere(cup_diameter / 2.0)
+scale_mat_right = App.Matrix4x4()
+scale_mat_right.scale(0.7, 1.0, 1.0)
+right_sph_geom.transformShape(scale_mat_right)
+
+right_sph = doc.addObject("Part::Feature", "RightCupEllipsoid")
+right_sph.Shape = right_sph_geom
 right_sph.Placement = App.Placement(App.Vector(half_cavity - 6.0, 0, rotation_axis_z), App.Rotation(App.Vector(0,1,0), 0))
 
 right_ball_cut = doc.addObject("Part::Sphere", "RightBallCut")
@@ -262,4 +266,4 @@ for obj in doc.Objects:
 
 assembly.Visibility = True
 doc.recompute()
-App.Console.PrintMessage("FreeCAD V7.11 Master Assembly compiled successfully!\n")
+App.Console.PrintMessage("FreeCAD V7.12 Fixed Master Assembly compiled successfully!\n")
