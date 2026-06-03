@@ -5,10 +5,12 @@
 # Last Comment: V7.14 design - Added explicit FreeCAD.Base namespace requirement for Matrix4x4 operations to Section 6. # Project Requirements: Shoulder Massage Tennis Ball Holder
 # METADATA_END
 
-# FreeCAD V7.14 Fixed Namespace Matrix-Scaled Ellipsoid Assembly Macro
+# FreeCAD fix: adjust macro import structure to reference App.Base as an attribute to solve ModuleNotFoundError
 import FreeCAD as App
-import FreeCAD.Base as Base
 import Part
+
+# Access the Base namespace directly from the imported FreeCAD app object
+Base = App.Base
 
 # Initialize Document
 doc = App.activeDocument()
